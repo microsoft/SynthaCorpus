@@ -1,0 +1,210 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{url}
+\usepackage{color}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{listings}
+
+\newcommand{\red}[1]{{\color{red}{\emph{#1}}}}
+\newcommand{\projectName}{\texttt{SynthaCorpus}}
+\newcommand{\projectRoot}{\texttt{.../SynthaCorpus}}
+
+
+\title{Developer Overview of \projectName}
+\author{Microsoft}
+
+\begin{document}
+\maketitle{}
+
+The \projectName~project is written in C11 and perl 5.  Development
+has been carried out under cygwin on Windows 10, using gcc version
+5.4.0 and perl 5.22.  The C executables can also be built under Visual
+Studio 2015 and solution/project files are included in the
+distribution to facilitate this.  Successful building and basic
+operation under Bash on Windows-10 has been confirmed though more
+thorough testing is needed. I don't expect major problems porting to
+other environments.  However, because large data sizes lead to heavy
+memory demands, there is a strong assumption that the executables will
+be built for and run on 64-bit architecture.
+
+
+In the following it is assumed that the root of the project directory
+structure is at \projectRoot.  All references to directory paths are relative to
+that.
+
+\section{Licenses, Authorship and Copyright}
+The bulk of the code in this project was written by Microsoft.
+
+Third-party open-source code and content is also included as follows:
+
+\begin{description}
+  \item [Project Gutenberg books] - the directory
+    \texttt{ProjectGutenberg} contains 49 popular books in text
+    format, downloaded from \url{http://www.gutenberg.org/}.  These
+    are books which are no longer subject to copyright.  They
+    are provided as a small test set to illustrate and verify the
+    operation of project \projectName.
+    \item [Fowler Noll Vo hash function] - this is a hashing function
+      which we have consistently found to be fast and effective.  The code
+      is at \texttt{src/imported/Fowler-Noll-Vo-hash}.  Both
+      \texttt{fnv.c} and \texttt{fnv.h} in that directory include a
+      licence allowing free distribution.  See \url{http://www.isthe.com/chongo/tech/comp/fnv/}.
+      \item [Tiny Mersenne Twister random number generator] - this is
+        a fast random number generator with very good properties.  We
+        chose to use the tiny version (still with excellent
+        properties), to allow the possibility of corpus generation
+          being built into an indexer being studied.  The code is at
+          \texttt{src/imported/TinyMT\_cutdown}.  The file
+          \texttt{readme.html} contains the license.
+          See \url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/TINYMT/index.html}
+      \end{description}
+    
+
+
+\section{Project dependencies}
+Successful building and operation of the \projectName~project requires
+installation of the following packages.  Version numbers shown are the
+ones used.  Other versions may be suitable.
+
+\begin{itemize}
+\item \texttt{gcc 5.4.0} and \texttt{make 4.2.1} OR VisualStudio 2015
+\item \texttt{perl 5.22}
+  \item \texttt{gnuplot 5.0} -- for displaying extracted corpus properties
+  \item \texttt{pdflatex 2.9.4902} -- for compiling documentation (if needed)
+    \item \texttt{acroread 2017 version} OR other PDF viewer -- for viewing documentation
+      and plots.
+\end{itemize}
+
+
+
+\section{Building executables and documents}
+\subsection{With gcc}
+
+\begin{verbatim}
+cd src
+make cleanest
+make
+\end{verbatim}
+
+builds all the executables.  One warning is emitted, complaining about a function which is not
+referenced but which may be in future.  Currently, the executables
+remain in \texttt{src}.
+
+\subsection{With VS 2015}
+Solution files are stored in sub-directories of  \texttt{src}.
+E.g. in  \texttt{src/corpusGenerator}
+
+Properties are only set for the \texttt{Release}, \texttt{x64}
+combination.  Changes to defaults for this combination include:
+
+\begin{itemize}
+\item Project/General:  Use multi-byte characters
+  \item C/C++/Preprocessor: Define symbols \texttt{WIN64} and
+    \texttt{\_CRT\_SECURE\_NO\_WARNINGS}
+  \item C/C++/Precompiled headers: Not using precompiled headers
+  \item C/C++/Advanced:  Compile as C
+\end{itemize}
+
+Open the solution file with VS 2015 and click Build/Rebuild.
+
+The executable will be found in
+e.g. \texttt{src/corpusGenerator/x64/Releases/corpusGenerator.exe}
+
+\subsection{Building PDF documents}
+
+\begin{verbatim}
+cd doc
+rm *.pdf
+make
+\end{verbatim}
+
+
+\section{Notes on coding}
+
+Project \projectName~has been developed in the course of scientific
+research rather than engineered to commercial standards.  In many
+cases, but not always, there is quite extensive internal documentation
+at the head of modules or critical functions.
+Unfortunately, there is inconsistency in variable
+naming. The process of moving from the use\_of\_underscores to
+``camelCase'' is regrettably incomplete.
+
+Be warned that the principal author is highly enamoured of the
+\texttt{unless} clause in perl.  Most scripts contain many examples
+of:
+\begin{verbatim}
+die "message"
+   unless <condition>;
+\end{verbatim}
+
+The C programs make very extensive use of ``dahash'' hash tables,
+defined in \texttt{src/utils/dahash.[ch]}.  These hash tables avoid
+the use of buckets.  Their size is constrained to be a power of two
+and collisions are handled by relatively prime rehash.  Once a table
+reaches a specified percentage of capacity, the table size is doubled
+behind the scenes.  The hash function is the Fowler Noll Vo one.
+
+Also defined is a mechanism for dynamic arrays --
+\texttt{src/utils/dynamicArrays.[ch]}.  Accessing an array element
+beyond allocated storage, causes the array to grow using a
+configurable strategy.
+
+C programs make extensive use of memory mapping through wrappers in
+\texttt{src/utils/general.[ch]} which use either the
+Windows style \texttt{CreateFileMapping()/MapViewOfFile()} (used if the
+WIN64 symbol is defined) or the Unix interface \texttt{mmap()}.
+
+All programs assume the use of UTF-8.  We recommend the use of the
+iconv library \url{https://www.gnu.org/software/libiconv/} for
+converting other character sets into UTF-8.  Functions for dealing
+with UTF-8 are in \texttt{src/characterSetHandling/unicode.[ch]}.
+Also in that directory is a perl script for updating Unicode tables
+from the database at \url{http://unicode.org/}.
+
+
+\section{Layout of Project Directories}
+
+The project root directory contains the following files and directories:
+
+\begin{description}
+  \item[\texttt{doc}] - Contains the LaTeX source and PDFs of project documentation.
+  \item[\texttt{Experiments}] - This is the directory under which all
+    the output produced by scripts and executables will be stored.  If
+    it doesn't exist the main perl scripts will create it.
+\item[\texttt{LICENCE.TXT}] - See beginning of this document.
+  \item[\texttt{ProjectGutenberg}] - Text versions of 49 books used to
+    illustrate and validate the executables in this project.
+  \item[\texttt{src}] - All the perl and C sources.  Currently
+    executables are built in or under this directory.
+\end{description}
+
+\section{Desirable future developments}
+
+\begin{enumerate}
+  \item Code tidyup - variable names, internal documentation, module
+    structure.  [Boring but useful]
+    \item Additional document formats - or maybe converters from other
+      formats into STARC format?  [Boring but useful]
+      \item Piecewise growth models - Currently scaling up from a
+        small corpus assumes the use of only a simple linear model for
+        word frequency distribution.  [A challenge and very useful
+          contribution.]
+        \item Extending the supported term dependency models to include
+          term repetition within a document, and term co-occurrence as
+          well as n-grams. [A challenge and very useful
+          contribution.]
+        \item Efficiency monitoring and improvement, particularly
+          reducing memory demands without exploding runtime.  [Could
+            increase scope of application.]
+          \item Reduce memory demands of \verb|corpusGenerator.exe| by
+            using more memory-efficient representations of Markov
+            transition matrices.  [Could
+            increase scope of application.]
+        \end{enumerate}
+
+\section{Using \projectName}
+
+Please see the companion User Overview document.
+
+
+\end{document}
