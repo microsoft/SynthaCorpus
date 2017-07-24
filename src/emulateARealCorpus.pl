@@ -46,6 +46,11 @@ if ($cwd =~ m@/cygdrive@) {
     $cwd =~ s@/cygdrive/([a-zA-Z])/@$1:/@;
 }
 
+$plotter = `which gnuplot 2>&1`;
+chomp($plotter);
+$plotter .= '.exe' if ($^O =~ /cygwin/i || $^O =~ /MSWin/i);
+undef $plotter if $plotter =~/^which: no/;
+
 $markov_defaults = "-markov_lambda=0 -markov_model_word_lens=TRUE -markov_use_vocab_probs=FALSE -markov_full_backoff=FALSE -markov_assign_reps_by_rank=TRUE -markov_favour_pronouncable=TRUE";
 $top_terms = 25;
 
@@ -180,13 +185,6 @@ propertyExtractor options: $propertyExtractorOptions
 -----------------------------------------------------------------------
 
     ";
-
-undef $plotter;
-if (! (-x "/usr/bin/gnuplot")) {
-    warn "\n\nWarning: /usr/bin/gnuplot not found.  PDFs of graphs will not be generated.\n";
-} else {
-    $plotter = "/usr/bin/gnuplot";
-}
 
 sleep(3);  # Give people an instant to read the settings.
 
@@ -625,7 +623,11 @@ close P;
 if (defined($plotter)) {
     $rslt = `$plotter $pcfile > /dev/null 2>&1`;
     die "$plotter failed with code $? for $pcfile!\n$rslt\n" if $?;
+} else {
+    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
+
+    
 
 #...........................................................................#
 #         Now plot the document length distributions for base and mimic     #

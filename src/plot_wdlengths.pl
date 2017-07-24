@@ -23,6 +23,11 @@ die "Usage: $0 <corpusName> <tfModel> <tr_model> <dl_model> <dependence_model>
 
   " unless $#ARGV == 4;
 
+$plotter = `which gnuplot 2>&1`;
+chomp($plotter);
+$plotter .= '.exe' if ($^O =~ /cygwin/i || $^O =~ /MSWin/i);
+undef $plotter if $plotter =~/^which: no/;
+
 $experimentRoot = "$cwd";  # Assume we are run from src directory
 $experimentRoot =~ s@/[^/]*$@@;  # strip off the last component of the path
 $experimentRoot .= "/Experiments";
@@ -94,17 +99,15 @@ plot \"$wdf[0]\" title \"Base\" pt 7 ps 0.4, \"$wdf[1]\" title \"Mimic\" pt 7 ps
 close P;
 
 undef $plotter;
-if (! (-x "/usr/bin/gnuplot")) {
-    warn "\n\nWarning: /usr/bin/gnuplot not found.  PDFs of graphs will not be generated.\n";
-} else {
-    $plotter = "/usr/bin/gnuplot";
-}
 
 if (defined($plotter)) {
     $cmd = "$plotter $pcfile\n";
     $code = system($cmd);
     die "$cmd failed" if $code;
+} else {
+    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
+
 
 
 print "Plot commands in $pcfile. To view the PDFs use:

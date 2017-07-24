@@ -19,6 +19,12 @@
 
 $|++;
 
+$plotter = `which gnuplot 2>&1`;
+chomp($plotter);
+$plotter .= '.exe' if ($^O =~ /cygwin/i || $^O =~ /MSWin/i);
+undef $plotter if $plotter =~/^which: no/;
+
+
 my(@xvals);
 my(@yvals);
 my(@coeffs);
@@ -112,13 +118,6 @@ $plotcmd
 
 close PCMD;
 
-undef $plotter;
-if (! (-x "/usr/bin/gnuplot")) {
-    warn "\n\nWarning: /usr/bin/gnuplot not found.  PDFs of graphs will not be generated.\n";
-} else {
-    $plotter = "/usr/bin/gnuplot";
-}
-
 if (defined($plotter)) {
     `$plotter $pcfile`;
     die "$plotter failed with code $? for $pcfile!\n" if $?;
@@ -129,6 +128,8 @@ if (defined($plotter)) {
     acroread $lsqfitdir${pathStem}_lsqfit.pdf
 
     The corresponding plot.cmds files are in the same directory.\n";
+} else {
+    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
 
 print "\nAll done.  \n";

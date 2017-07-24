@@ -56,6 +56,10 @@ die "Usage: $0 <corpusName> <scaleFactor> <tf_model> <doc_length_model> <term_re
 
 print "\n*** $0 @ARGV\n\n";
 
+$plotter = `which gnuplot 2>&1`;
+chomp($plotter);
+$plotter .= '.exe' if ($^O =~ /cygwin/i || $^O =~ /MSWin/i);
+undef $plotter if $plotter =~/^which: no/;
 
 $markov_defaults = "-markov_lambda=0 -markov_model_word_lens=TRUE -markov_use_vocab_probs=FALSE -markov_full_backoff=FALSE -markov_assign_reps_by_rank=TRUE -markov_favour_pronouncable=TRUE";
 
@@ -344,17 +348,15 @@ plot \"$baseDir/${corpusName}_vocab.plot\" title \"Base\" pt 7 ps 0.25, \"$workD
 
 close P;
 
-undef $plotter;
-if (! (-x "/usr/bin/gnuplot")) {
-    warn "\n\nWarning: /usr/bin/gnuplot not found.  PDFs of graphs will not be generated.\n";
-} else {
-    $plotter = "/usr/bin/gnuplot";
-}
 
 if (defined($plotter)) {
     `$plotter $pcfile > /dev/null 2>&1`;
     die "$plotter failed with code $? for $pcfile!\n" if $?;
+} else {
+    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
+
+
 print "
 Scaling up all done.  
 

@@ -19,6 +19,11 @@ die "Usage: $0 <corpus_name> <tfModel> <trModel> <dlModel> <dependence_model>
 
   " unless $#ARGV == 4;
 
+$plotter = `which gnuplot 2>&1`;
+chomp($plotter);
+$plotter .= '.exe' if ($^O =~ /cygwin/i || $^O =~ /MSWin/i);
+undef $plotter if $plotter =~/^which: no/;
+
 $experimentRoot = $cwd;  # Assume we are run from the src directory
 $experimentRoot =~ s@/[^/]*$@@;  # strip off the last component of the path
 $experimentRoot .= "/Experiments";
@@ -76,12 +81,6 @@ plot \"$T\" title \"Base\" pt 7 ps 0.4, \"$U\" title \"Mimic\" pt 7 ps 0.17
 
 close P;
 
-undef $plotter;
-if (! (-x "/usr/bin/gnuplot")) {
-    warn "\n\nWarning: /usr/bin/gnuplot not found.  PDFs of graphs will not be generated.\n";
-} else {
-    $plotter = "/usr/bin/gnuplot";
-}
 
 if (defined($plotter)) {
     $cmd = "$plotter $pcfile\n";
@@ -93,7 +92,10 @@ if (defined($plotter)) {
 
     acroread $emuDir/${corpusName}_base_v_mimic_doclens.pdf
 \n";
+} else {
+    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
+
 
 # Remove temporary files
 unlink $T;

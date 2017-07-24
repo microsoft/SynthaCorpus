@@ -71,6 +71,11 @@ print "\n*** $0 @ARGV\n\n";
 
 $corpusName = $ARGV[0];
 
+$plotter = `which gnuplot 2>&1`;
+chomp($plotter);
+$plotter .= '.exe' if ($^O =~ /cygwin/i || $^O =~ /MSWin/i);
+undef $plotter if $plotter =~/^which: no/;
+
 $experimentRoot = "../Experiments";
 mkdir $experimentRoot unless -d $experimentRoot;
 $experimentDir = "$experimentRoot/Sampling";
@@ -313,13 +318,6 @@ for ($i = 1; $i <= $num_iters; $i++) { # This loop enumerates iterations, but ea
 }  # End of outer loop
 
 print $field_explanations;
-
-undef $plotter;
-if (! (-x "/usr/bin/gnuplot")) {
-    warn "\n\nWarning: /usr/bin/gnuplot not found.  PDFs of graphs will not be generated.\n";
-} else {
-    $plotter = "/usr/bin/gnuplot";
-}
 
 
 generate_plots();  # Generate plot.cmds files even if there's gno gnuplot
@@ -584,7 +582,10 @@ Dat plots (generally linear scales, percentages relative to full collection):
 
 ";
 
+    }  else {
+	warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
     }
+
 
     print "
 Scaling model:

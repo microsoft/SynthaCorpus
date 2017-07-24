@@ -10,12 +10,18 @@
 $|++;
 
 use Cwd;
+## use File::Which;  Not installed by default
+
 $cwd = getcwd();
 if ($cwd =~ m@/cygdrive@) {
     $cwd =~ s@/cygdrive/([a-zA-Z])/@$1:/@;
 }
 
 
+$plotter = `which gnuplot 2>&1`;
+chomp($plotter);
+$plotter .= '.exe' if ($^O =~ /cygwin/i || $^O =~ /MSWin/i);
+undef $plotter if $plotter =~/^which: no/;
 
 $thresh_perc_of_max = 1;
 $bucketing_thresh = 256;  # Bucket if the range of lengths is larger than this.
@@ -195,14 +201,6 @@ plot \"$dlhfile\" pt 7 ps 0.75  title \"${corpusName}\", \"$dl_segments\" with l
 
 close P;
 
-
-undef $plotter;
-if (! (-x "/usr/bin/gnuplot")) {
-    warn "\n\nWarning: /usr/bin/gnuplot not found.  PDFs of graphs will not be generated.\n";
-} else {
-    $plotter = "/usr/bin/gnuplot";
-}
-
 if (defined($plotter)) {
     `$plotter $pcfile > /dev/null 2>&1`;
     die "Gnuplot failed with code $? for 'gnuplot $pcfile!'\n" if $?;
@@ -210,6 +208,8 @@ if (defined($plotter)) {
     print "To see quality of fitting:
 
     acroread $emuDir/lengthPlots/${corpusName}_dlsegs_fitting.pdf\n\n";
+} else {
+    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
 
 print "The corpusGenerator option is: $cgoption\n";
