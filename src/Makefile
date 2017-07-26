@@ -61,8 +61,8 @@ git:
 	git add `find .. -iname \*VERSION\*`
 	git add `find .. -iname \*CONTRIBUTING\*`
 	git add `find .. -name Makefile\*`
-	git add `find .. -iname \*.tex`
-	git add `find .. -iname \*.pdf`
+	git add `find ../doc -iname \*.tex`
+	git add `find ../doc -iname \*.pdf`
 
 	echo "\nPlease run git commit -m \"<commit message>\" and git push"
 
