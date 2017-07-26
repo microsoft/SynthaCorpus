@@ -15,10 +15,9 @@
 \maketitle{}
 
 
-
 In its simplest form a text corpus consists of a set of documents,
-each containing text,  comprising a sequence of words\footnote{In CJKT languages, such
-  as Chinese, there is no explicit segmentation into
+each containing text, comprising a sequence of words\footnote{In CJKT
+  languages, such as Chinese, there is no explicit segmentation into
   words. \projectName~ doesn't yet attempt to deal with CJKT text.}.
 A synthetic corpus has the same form, but the sequence of words in a
 document may be randomly chosen, and the representation of the words
@@ -44,11 +43,76 @@ There are a number of scenarios in which \projectName~ may be useful:
     specific properties, e.g. to stress test an IR system,
 \end{enumerate}
 
+\section{Getting going with \projectName}
+
+\subsection{Obtaining \projectName}
+
+Assuming you are working with a Unix style shell, e.g. on Linux or MacOSx,
+under Cygwin, or under Ubuntu Bash for Windows 10 ....
+
+\begin{verbatim}
+git clone "https://github.com/Microsoft/Synthacorpus"
+\end{verbatim}
+
+
+\subsection{Prerequisites}
+
+To use the system you need to build executables from their sources.
+For this you need to have installed either \texttt{gcc} and
+\texttt{make} or Microsoft Visual Studio 2015.
+
+To use the system you will also need to have \texttt{perl 5}
+installed.  Finally, to generate PDF plots (optional) and view them you will
+need to have installed the \texttt{gnuplot} package and a PDF viewer
+such as \texttt{acrobat reader}, \texttt{okular}, \texttt{preview}, or
+a browser such as \texttt{edge}.
+
+\subsection{Building with gcc / make}
+
+If you have \texttt{gcc}, \texttt{make}, \texttt{perl} and
+\texttt{gnuplot} installed and in your path you can just type:
+
+\begin{verbatim}
+cd SynthaCorpus/src    # Change to the src directory of the cloned repository
+perl exerciser.pl
+\end{verbatim}
+
+The Exerciser script builds the executables from scratch and then runs
+most of the tools, starting with a corpus derived from some Project
+Gutenberg books.
+
+\subsection{Building with Visual Studio 2015}
+
+To build the executable using Visual Studio 2015 (VS 2015), please navigate to
+\texttt{SynthaCorpus/src/Buildexes} using the file explorer, then
+double click on \texttt{BuildAllExes.sln}. That should open the VS
+2015 application.  In the lower part of the toolbar at the top
+of the VS window, select \texttt{Release} and \texttt{x64} from the
+first and second drop-downs.  Then click on \texttt{Rebuild solution}
+from the \texttt{Build} menu.
+
+If the build succeeds you should see
+\begin{verbatim}
+========== Rebuild All: 8 succeeded, 0 failed, 0 skipped ==========
+\end{verbatim}
+in the output pane at the bottom, and all eight exes will be in:
+
+\begin{verbatim}
+SynthaCorpus/src/BuildAllExes/x64/Release/
+\end{verbatim}
+
+You can then run the Exerciser script:
+\begin{verbatim}
+cd SynthaCorpus/src    # Change to the src directory of the cloned repository
+perl exerciser.pl useVS   # An option containing VS removes any GCC
+                          # exes and uses VS ones
+\end{verbatim}
+
+
 
 \section{Other documentation}
-A companion document \url{developer_overview.pdf} outlines
-prerequisites for building and using the system as well as how to
-build it.  It also provides
+A companion document \url{developer_overview.pdf} gives more detail on 
+uilding and using the system.  It also provides
 information for developers who wish to understand how things work, or
 to contribute enhancements or extensions to the project.  That
 document lists some useful extensions which contributors may wish to
@@ -101,20 +165,10 @@ other of only two formats:
     2. Other columns of metadata may optionally be present.
   \item[STARC] Simple Text Archive format allows documents to contain
     control characters, by prepending each record with an
-    ASCII-encoded length.   \red{A definition of the STARC format is
-      provided elsewhere.}
+    ASCII-encoded length.  The STARC format is specified in the
+    Developer Overview.
 \end{description}
 
-A wide variety of other formats have been used in publicly distributed
-corpora such as those of TREC and CLEF.  Perhaps in future
-\projectName~ will be extended to handle them directly.  In the
-meantime, you would need to develop a converter from whatever other format
-into STARC format.  To assist in this process, you may wish to look at
-\texttt{convertPGtoSTARC.c}, the provided  converter from
-Project Gutenberg format into STARC. Tools for checking the validity
-of a STARC file and for counting documents are also provided:
-\texttt{checkSTARCFile.exe} and
-\texttt{countDocsInCorpus.exe}
 
 
 \section{Limitations on size}
@@ -130,16 +184,19 @@ dramatically.
 
 \section{Example usage}
 
-Assuming you have installed \projectName~ at X.  The following sequence
-of commands creates a STARC file from the Project Gutenberg documents,
+Below are sequences of commands (similar to the content of the
+\texttt{exerciser.pl} script) which create a STARC file from the Project Gutenberg documents,
 emulates it, generates sets of known item queries for the base corpus
 and also the emulated one, runs sampling experiments on the base
 corpus, scales up a 1\% sample and compares the scaled-up sample with
-the original.
+the original.   The first version uses the executables built by
+\texttt{gcc} and the second those built by Visual Studio 2015.
+ 
+\subsection{GCC example}
 
 {\footnotesize
 \begin{verbatim}
-cd X/src
+cd SynthaCorpus/src
 mkdir ../Experiments
 ./convertPGtoSTARC.exe ../ProjectGutenberg/*.txt > ../Experiments/PG.STARC
 ./emulateARealCorpus.pl PG Piecewise markov-5e dlhisto ngrams3
@@ -150,6 +207,26 @@ mkdir ../Experiments
 ./samplingExperiments.pl PG
 ./scaleUpASample.pl PG 100 Linear markov-5e dlnormal ind
 ./queryGenerator.exe corpusFileName=../Experiments/Scalingup/Working/PG.tsv 
+    propertiesStem=../Experiments/Scalingup/Working/PG  -numQueries=1000
+
+\end{verbatim}
+}
+\subsection{VS 2015 example}
+
+{\footnotesize
+\begin{verbatim}
+cd SynthaCorpus/src
+mkdir ../Experiments
+BuildAllExes/x64/Release/convertPGtoSTARC.exe ../ProjectGutenberg/*.txt > ../Experiments/PG.STARC
+./emulateARealCorpus.pl PG Piecewise markov-5e dlhisto ngrams3
+BuildAllExes/x64/Release/queryGenerator.exe corpusFileName=../Experiments/PG.STARC 
+    propertiesStem=../Experiments/Base/PG  -numQueries=1000
+BuildAllExes/x64/Release/queryGenerator.exe 
+    corpusFileName=../Experiments/Emulation/Piecewise/markov-5e_dlhisto_ngrams3/PG.starc 
+    propertiesStem=../Experiments/Emulation/Piecewise/markov-5e_dlhisto_ngrams3/PG  -numQueries=1000
+./samplingExperiments.pl PG
+./scaleUpASample.pl PG 100 Linear markov-5e dlnormal ind
+BuildAllExes/x64/Release/queryGenerator.exe corpusFileName=../Experiments/Scalingup/Working/PG.tsv 
     propertiesStem=../Experiments/Scalingup/Working/PG  -numQueries=1000
 
 \end{verbatim}

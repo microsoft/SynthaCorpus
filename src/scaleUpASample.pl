@@ -132,9 +132,9 @@ die "Can't read $scalingModelFile\n"
     unless open SMF, $scalingModelFile;
 
 # The executables and scripts we need
-$generator = check_exe("$cwd/corpusGenerator.exe");
-$lsqcmd = check_exe("$cwd/lsqfit_general.pl");
-$extractor = check_exe("$cwd/corpusPropertyExtractor.exe");
+$generator = check_exe("corpusGenerator.exe");
+$lsqcmd = check_exe("lsqfit_general.pl");
+$extractor = check_exe("corpusPropertyExtractor.exe");
 
 
 $experimentDir = "$experimentRoot/Scalingup";
@@ -379,14 +379,36 @@ exit 0;
 #----------------------------------------------------------------------
 
 sub check_exe {
+    # The argument is expected to be the name of either a
+    # perl script or an executable.  For a perl script we check that
+    # a script of that name exists in the current directory.  If it
+    # does we convert its name into an absolute path and return the
+    # command to run it using the perl interpreter which invoked us.
+    #
+    # In the case of an EXE, we look in the current directory first
+    # (priority to the GCC executables).  If not there, we look in
+    # the place where VS2015 puts its executables.  If we succeed
+    # we return an absolute path to the EXE.
+    #
+    # Error exit if we don't find what we want.
     my $exe = shift;
     if ($exe =~ /\.pl$/) {
 	die "$exe doesn't exist.\n"
 	    unless -r $exe;
-	return "$perl $exe";
+	return $exe if ($exe =~ m@/@);  # It was a path, not a name.
+	return "$perl $cwd/$exe";
     } else {
-	die "$exe doesn't exist or isn't executable.\n"
-	    unless -x $exe;
-	return $exe;
+	# Try the GCC built EXE first
+	if (-x $exe) {
+	    return $exe if ($exe =~ m@/@);  # It was a path, not a name.
+	    return "$cwd/$exe";
+	} else {
+	    my $vsexe = "BuildAllExes/x64/Release/$exe";	    
+	    die "Can't find either GCC or VS2015 versions of $exe.\n"
+		unless -x $vsexe;
+	    return "$cwd/$vsexe";
+	}
     }
 }
+
+

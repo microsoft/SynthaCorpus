@@ -71,7 +71,7 @@ static void checkSTARCInMem(byte *fileInMem, size_t fileSize) {
     
     docCount++;
     if (docCount % printerval == 0) {
-      printf("   --- Select_random_documents: Input record number %10lld ---\n", docCount);
+      printf("   --- checkSTARCfile: Input record number %10lld ---\n", docCount);
       if (docCount % (printerval * 10) == 0) printerval *= 10;
     }
     nextRec = actualRecord + recLen;

@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#ifdef WIN64  // For the definition of _O_BINARY in _setmode
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 #include "definitions.h"
 #include "utils/general.h"
@@ -85,6 +89,10 @@ int main(int argc, char **argv) {
   test_strstr_within_line();
   
   if (argc < 2) print_usage(argv[0]);
+
+#ifdef WIN64
+  _setmode(1,_O_BINARY);  // ON Windows we need to force stdout to binary mode otherwise we get double CRs
+#endif
 
   for (f = 1; f <argc; f++) { // Loop over the input files
     // Make an array of pointers to all the lines in the file

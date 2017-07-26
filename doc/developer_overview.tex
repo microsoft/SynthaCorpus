@@ -21,21 +21,26 @@ has been carried out under cygwin on Windows 10, using gcc version
 5.4.0 and perl 5.22.  The C executables can also be built under Visual
 Studio 2015 and solution/project files are included in the
 distribution to facilitate this.  Successful building and basic
-operation under Bash on Windows-10 has been confirmed though more
-thorough testing is needed. I don't expect major problems porting to
+operation under Bash on Windows-10 and on Apple Macintosh
+has been confirmed though more
+thorough testing is needed. We don't expect major problems porting to
 other environments.  However, because large data sizes lead to heavy
-memory demands, there is a strong assumption that the executables will
-be built for and run on 64-bit architecture.
+memory demands, there is a requirement that the executables will
+be built for and run on a 64-bit architecture.
 
-
-In the following it is assumed that the root of the project directory
-structure is at \projectRoot.  All references to directory paths are relative to
+In the following it is assumed that the root of the cloned project directory
+structure is at \texttt{SynthaCorpus}.  All references to directory paths are relative to
 that.
 
-\section{Licenses, Authorship and Copyright}
-The bulk of the code in this project was written by Microsoft.
+\section{Using \projectName}
 
-Third-party open-source code and content is also included as follows:
+Please see the companion User Overview document.
+
+
+
+\section{Licenses, Authorship and Copyright}
+Except for the third-party open-source code and content listed below
+the code in this project was written by Microsoft.
 
 \begin{description}
   \item [Project Gutenberg books] - the directory
@@ -59,6 +64,40 @@ Third-party open-source code and content is also included as follows:
           See \url{http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/TINYMT/index.html}
       \end{description}
     
+\section{Simple Text ARChive (STARC) format}
+As noted in the User Overview, STARC is the recommended format for use
+with \projectName.  A STARC is a UTF-8 text file consisting of a
+concatenation of records.   Three types of records are defined: Document
+(D), Header (H), and Trailer (T). D records are the most important.  H
+and T records are entirely optional but can be used to contain
+metadata about a D record.  SynthaCorpus extracts properties
+from D records only.  When generating, it puts a document
+identifier into an H record preceding the D record containing the
+generated text.
+
+A STARC record starts with a space, then a decimal length $L$
+represented in ASCII digits, then a single character specifying the record
+type (H, D, or T), another space, followed by $L$ bytes of the actual
+document content.  This form of representation allows arbitrary
+content including control characters and NULs.
+
+Here is an example STARC containing four records.  The dollar signs are not
+part of the archive; they are included to unambigously mark the beginning and end of
+the STARC.  \\r represents RETURN and \\n represents LINEFEED.
+\begin{verbatim}
+\$ 4H Doc1 19D A quick brown fox\r\n 4H Doc2 22D Jumped over the lazy\r\n$
+\end{verbatim}
+
+A wide variety of other formats have been used in publicly distributed
+corpora such as those of TREC and CLEF.  Perhaps in future
+\projectName~ will be extended to handle them directly.  In the
+meantime, you would need to develop a converter from whatever other format
+into STARC format.  To assist in this process, you may wish to look at
+\texttt{convertPGtoSTARC.c}, the provided  converter from
+Project Gutenberg format into STARC. Tools for checking the validity
+of a STARC file and for counting documents are also provided:
+\texttt{checkSTARCFile.exe} and
+\texttt{countDocsInCorpus.exe}
 
 
 \section{Project dependencies}
@@ -78,7 +117,10 @@ ones used.  Other versions may be suitable.
 
 
 \section{Building executables and documents}
+
 \subsection{With gcc}
+As noted in the User Overview, you can build the gcc executables by
+running the Exerciser script.  If you want to do it manually,
 
 \begin{verbatim}
 cd src
@@ -91,8 +133,10 @@ referenced but which may be in future.  Currently, the executables
 remain in \texttt{src}.
 
 \subsection{With VS 2015}
-Solution files are stored in sub-directories of  \texttt{src}.
-E.g. in  \texttt{src/corpusGenerator}
+The relevant VS solution file is in
+\texttt{src/BuildAllExes}. It includes the projects which
+build eight executables in the \texttt{src/BuildAllExes}
+directory.
 
 Properties are only set for the \texttt{Release}, \texttt{x64}
 combination.  Changes to defaults for this combination include:
@@ -107,17 +151,23 @@ combination.  Changes to defaults for this combination include:
 
 Open the solution file with VS 2015 and click Build/Rebuild.
 
-The executable will be found in
-e.g. \texttt{src/corpusGenerator/x64/Releases/corpusGenerator.exe}
+\subsection{Testing the system once built}
+The exerciser script runs each of the main components and can be used
+as a basic sanity test.  For a more thorough test add the '\texttt{thorough}'
+option to the \texttt{exerciser.pl} command line.
 
-\subsection{Building PDF documents}
+\subsection{Rebuilding PDF documents}
+In the uncommon case that you want to rebuild the documentation PDFs, you will need
+to have a TeX distribution installed plus a few additional packages,
+easily obtained via CTAN.
 
 \begin{verbatim}
 cd doc
 rm *.pdf
-make
+pdflatex user_overview
+pdflatex developer_overview
+pdflatex how_to_synthesize_a_corpus
 \end{verbatim}
-
 
 \section{Notes on coding}
 
@@ -137,14 +187,18 @@ die "message"
    unless <condition>;
 \end{verbatim}
 
-The C programs make very extensive use of ``dahash'' hash tables,
+The C programs make very extensive use of \texttt{dahash} hash tables,
 defined in \texttt{src/utils/dahash.[ch]}.  These hash tables avoid
 the use of buckets.  Their size is constrained to be a power of two
 and collisions are handled by relatively prime rehash.  Once a table
 reaches a specified percentage of capacity, the table size is doubled
 behind the scenes.  The hash function is the Fowler Noll Vo one.
 
-Also defined is a mechanism for dynamic arrays --
+Example code for using the \texttt{dahash} system is in
+\texttt{src/utils/dahashDemo.c}.
+
+
+SynthaCorpus also defines a mechanism for dynamic arrays --
 \texttt{src/utils/dynamicArrays.[ch]}.  Accessing an array element
 beyond allocated storage, causes the array to grow using a
 configurable strategy.
@@ -201,10 +255,6 @@ The project root directory contains the following files and directories:
             transition matrices.  [Could
             increase scope of application.]
         \end{enumerate}
-
-\section{Using \projectName}
-
-Please see the companion User Overview document.
 
 
 \end{document}

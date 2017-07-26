@@ -52,9 +52,18 @@ cleanest: cleaner
 
 git:
 	git add `find . -name \*.pl`
-	git add *.c *.h */*.c */*.h */*/*.c */*/*.h Makefile */README* ../doc/*.tex ../doc/*.pdf
-	git add ../LICENSE.TXT ../VERSION.TSV 
-	git add */*.sln */*.vcxproj #*.csproj App.config Properties/AssemblyInfo.cs 
-	echo "Please run git commit -m \"<commit message>\" and git push"
+	git add `find . -name \*.c`
+	git add `find . -name \*.h`
+	git add `find . -name \*.sln`
+	git add `find . -name \*.vcxproj`
+	git add `find .. -iname \*README\*`
+	git add `find .. -iname \*LICENSE\*`
+	git add `find .. -iname \*VERSION\*`
+	git add `find .. -iname \*CONTRIBUTING\*`
+	git add `find .. -name Makefile\*`
+	git add `find .. -iname \*.tex`
+	git add `find .. -iname \*.pdf`
+
+	echo "\nPlease run git commit -m \"<commit message>\" and git push"
 
 
