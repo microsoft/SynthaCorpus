@@ -30,12 +30,13 @@ if ($#ARGV >= 0) {
 mkdir "../Experiments"
 	unless -e "../Experiments";
 
-$converter = check_exe("convertPGtoSTARC.exe");
-$queryGen = check_exe("queryGenerator.exe");
-
 
 run("make cleanest");
 run("make") if (!$useVS);
+
+$converter = check_exe("convertPGtoSTARC.exe");
+$queryGen = check_exe("queryGenerator.exe");
+
 
 run("$converter ../ProjectGutenberg/*.txt > ../Experiments/PG.STARC");
 if (defined($thorough)) {
