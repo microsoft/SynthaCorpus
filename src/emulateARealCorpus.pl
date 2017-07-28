@@ -58,7 +58,7 @@ $|++;
 
 die "Usage: $0 <corpus_name> <tf_model> <doc_length_model> <term_repn_model> <dependence_model> 
     <corpus_name> is a name (e.g. TREC-AP) not a path.  We expect to find a single file called
-          <corpus_name>.tsv or <corpus_name>.starc in the directory ../Experiments/Emulation
+          <corpus_name>.tsv or <corpus_name>.starc in the directory ../Experiments
     <tf_model> ::= Piecewise|Linear|Copy
           If Piecewise we'll use a 3-segment term-frequency model with 10 headpoints, 10 linear
           segments in the middle and an explicit count of singletons.  If Linear we'll approximate
@@ -440,8 +440,8 @@ $mimic{gzip_ratio} = get_compression_ratio("$emulationDir/$corpusName$fileType",
 #                         Now extract the properties of the $syntyp index                          #
 #..................................................................................................#
 
-#Run the corpusPropertyExtractor
-$cmd = "$extractor inputFileName=$emulationDir/${corpusName}.STARC outputStem=$emulationDir/$corpusName";
+#Run the corpusPropertyExtractor after determining whether the extension is TSV or STARC
+$cmd = "$extractor inputFileName=$emulationDir/${corpusName}$fileType outputStem=$emulationDir/$corpusName";
 $code = system($cmd);
 die "Corpus property extraction failed with code $code. Cmd was:\n   $cmd\n"
     if ($code);
