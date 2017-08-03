@@ -808,22 +808,24 @@ sub get_compression_ratio {
 	return "N/A";
     }
 
-    my $gzo = `gzip -l $tmpFile`;
-    if ($?) {
-	warn "gzip -l failed with code $?\n";
-	unlink "$tmpFile";
-	return "N/A";
-    }
+#    my $gzo = `gzip -l $tmpFile`;  # Produced wrong answers for a multi-gigabyte file
+#    if ($?) {
+#	warn "gzip -l failed with code $?\n";
+#	unlink "$tmpFile";
+#	return "N/A";
+#    }
+# 
+    #    $gzo =~ /([0-9]+)\s+([0-9]+)\s+([0-9.]+%)/s;
 
-   
-    $gzo =~ /([0-9]+)\s+([0-9]+)\s+([0-9.]+%)/s;
-    $ratio = $3;
-    # Note: ratio is the percentage of the amount of space removed to
-    # the original amount of space i.e. (old - new) * 100 / old
+    my $uncoSize = -s $file;
+    my $coSize = -s $tmpFile;
+    
+    $ratio = sprintf("%.3f", $uncoSize / $coSize);
+    
     print "
 
 
-$tmpFile: compression ratio reported by gzip is $ratio
+$tmpFile: compression ratio (uncompressed size : compressed size) is $ratio
 
 
 
