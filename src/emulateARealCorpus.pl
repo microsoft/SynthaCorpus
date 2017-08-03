@@ -623,7 +623,7 @@ if (defined($plotter)) {
     $rslt = `$plotter $pcfile > /dev/null 2>&1`;
     die "$plotter failed with code $? for $pcfile!\n$rslt\n" if $?;
 } else {
-    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
+    warn "\n\n$0: Warning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
 
     

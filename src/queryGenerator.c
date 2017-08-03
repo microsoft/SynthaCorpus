@@ -255,7 +255,7 @@ static void printUsage(char *progName, arg_t *args) {
 
 int main(int argc, char **argv) {
   int a, error_code, q, queryLength , printerval = 10;
-  double aveQueryLength = 0.0, startTime, generationStarted, timeTaken;
+  double aveQueryLength = 0.0, startTime, generationStarted, generationTime, overheadTime;
   char *ignore, *fnameBuffer, ASCIITokenBreakSet[] = DFLT_ASCII_TOKEN_BREAK_SET;
   size_t stemLen;
   globals_t globals;
@@ -331,13 +331,13 @@ int main(int argc, char **argv) {
     pickTargetAndOutputAQuery(&globals, &params, queryLength);
     aveQueryLength += (double)queryLength;
     if (q % printerval == 0) {
-      printf("   --- %s: %d queries generated ---  Average time per query: %.3f sec.\n",
+      printf("   --- Progress %s: %d queries generated ---  Average time per query: %.3f sec.\n",
 	     params.propertiesStem, q, (what_time_is_it() - generationStarted) / (double)q);
       if (q % (printerval * 10) == 0) printerval *= 10;
     }
-
-    
   }
+
+  generationTime = what_time_is_it() - generationStarted;
 
   unmmap_all_of(globals.corpusInMemory, globals.corpusFH, globals.corpusMH,
 		globals.corpusSize);
@@ -345,8 +345,9 @@ int main(int argc, char **argv) {
   aveQueryLength /= (double)params.numQueries;
   printf("Number of queries: %d\nAve. query length: %.2f\nQuery file %s\n",
 	 params.numQueries, aveQueryLength, fnameBuffer);
-  timeTaken = what_time_is_it() - startTime;
-  printf("Total time taken: %.1f sec.\nAverage time per query: %.3f sec\n",
-	 timeTaken,  timeTaken / (double)params.numQueries);
+  overheadTime = (what_time_is_it() - startTime) - generationTime;
+  printf("Total time taken: %.1f sec. startup/shutdown + %.1f sec. generation time\n"
+	 "Average generation time per query: %.4f sec\n",
+	 overheadTime, generationTime,  generationTime / (double)params.numQueries);
 }
 

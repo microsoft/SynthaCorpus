@@ -603,7 +603,7 @@ Dat plots (generally linear scales, percentages relative to full collection):
 ";
 
     }  else {
-	warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
+	warn "\n\n$0: Warning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
     }
 
 

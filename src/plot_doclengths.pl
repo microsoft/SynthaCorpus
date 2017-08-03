@@ -93,7 +93,7 @@ if (defined($plotter)) {
     acroread $emuDir/${corpusName}_base_v_mimic_doclens.pdf
 \n";
 } else {
-    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
+    warn "\n\n$0: Warning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
 
 

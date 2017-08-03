@@ -129,7 +129,7 @@ if (defined($plotter)) {
 
     The corresponding plot.cmds files are in the same directory.\n";
 } else {
-    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
+    warn "\n\n$0: Warning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
 
 print "\nAll done.  \n";

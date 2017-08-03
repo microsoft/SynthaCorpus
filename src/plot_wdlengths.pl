@@ -98,14 +98,12 @@ plot \"$wdf[0]\" title \"Base\" pt 7 ps 0.4, \"$wdf[1]\" title \"Mimic\" pt 7 ps
 
 close P;
 
-undef $plotter;
-
 if (defined($plotter)) {
     $cmd = "$plotter $pcfile\n";
     $code = system($cmd);
     die "$cmd failed" if $code;
 } else {
-    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
+    warn "\n\n$0: Warning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
 
 

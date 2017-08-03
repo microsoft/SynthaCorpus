@@ -209,7 +209,7 @@ if (defined($plotter)) {
 
     acroread $emuDir/lengthPlots/${corpusName}_dlsegs_fitting.pdf\n\n";
 } else {
-    warn "\n\nWarning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
+    warn "\n\n$0: Warning: gnuplot not found.  PDFs of graphs will not be generated.\n\n";
 }
 
 print "The corpusGenerator option is: $cgoption\n";
