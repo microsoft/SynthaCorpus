@@ -56,7 +56,7 @@ $top_terms = 25;
 
 $|++;
 
-die "Usage: $0 <corpus_name> <tf_model> <doc_length_model> <term_repn_model> <dependence_model> 
+die "Usage: $0 <corpus_name> <tf_model> <doc_length_model> <term_repn_model> <dependence_model> [-dependencies=neither|both|base|mimic]
     <corpus_name> is a name (e.g. TREC-AP) not a path.  We expect to find a single file called
           <corpus_name>.tsv or <corpus_name>.starc in the directory ../Experiments
     <tf_model> ::= Piecewise|Linear|Copy
@@ -79,6 +79,11 @@ die "Usage: $0 <corpus_name> <tf_model> <doc_length_model> <term_repn_model> <de
           generated completely independently of each other.  Fulldep means ngrams + bursts 
           + coocs.  Dependence models are only applied if the relevant files, i.e ngrams.termids,
           bursts.termids, coocs.termids, are available for the base corpus. 
+
+    The default value for dependencies is both.  This means that corpusPropertyExtractor will
+    extract term dependency data for both the base and the mimic corpus.   That may be memory 
+    intensive and very time consuming. Other values can be used to suppress that computation 
+    for either or both of the base and mimic corpus. 
 \n"
 
     unless $#ARGV >= 4 ;
@@ -102,6 +107,7 @@ print "\n*** $0 @ARGV\n\n";
 
 $propertyExtractorOptions = "-obs_thresh=10";  # (must be the same for base and mimic corpora)
 
+$dependencies = "both";
 
 for ($a = 1; $a <=$#ARGV; $a++) {
     if ($ARGV[$a] eq "dlnormal") { $dl_model = $ARGV[$a];}
@@ -125,8 +131,13 @@ for ($a = 1; $a <=$#ARGV; $a++) {
     elsif ($ARGV[$a] eq "coocs") {$dep_model = "coocs";}
     elsif ($ARGV[$a] eq "fulldep") {$dep_model = "fulldep";}
 
-    else {die "Unrecognized argument $ARGV[$a]\n";}
+    elsif ($ARGV[$a] =~ /^-?dependencies=(.*)/) { 
+	$dependencies = $1;    
+    } else {die "Unrecognized argument $ARGV[$a]\n";}
 }
+
+die "Invalid argument $dependencies for -dependencies\n"
+    unless $dependencies =~ /^(both|neither|base|mimic)$/;
 
 die "No document length model specified\n"
     unless defined($dl_model);
@@ -182,6 +193,7 @@ Term dependence model: $dep_model
 Corpus name: $corpusName
 Output format: $fileType
 propertyExtractor options: $propertyExtractorOptions
+dependencies: $dependencies
 -----------------------------------------------------------------------
 
     ";
@@ -220,6 +232,9 @@ $base{gzip_ratio} = get_compression_ratio($corpusFile, $baseDir, $corpusName);
 
 #Run the corpusPropertyExtractor
 $cmd = "$extractor inputFileName=$corpusFile outputStem=$baseDir/$corpusName";
+$cmd .= " ignoreDependencies=TRUE"
+    if ($dependencies =~/^(neither|mimic)$/);
+print $cmd, "\n";
 $code = system($cmd);
 die "Corpus property extraction failed with code $code. Cmd was:\n   $cmd\n"
     if ($code);
@@ -442,6 +457,10 @@ $mimic{gzip_ratio} = get_compression_ratio("$emulationDir/$corpusName$fileType",
 
 #Run the corpusPropertyExtractor after determining whether the extension is TSV or STARC
 $cmd = "$extractor inputFileName=$emulationDir/${corpusName}$fileType outputStem=$emulationDir/$corpusName";
+$cmd .= " ignoreDependencies=TRUE"
+	if $dependencies =~ /^(neither|base)$/;	
+print $cmd, "\n";
+
 $code = system($cmd);
 die "Corpus property extraction failed with code $code. Cmd was:\n   $cmd\n"
     if ($code);
@@ -648,14 +667,16 @@ die "$cmd failed with code $?.\nCommand was $cmd.\n" if $?;
 
 
 print "
-  --------------------------- $syntyp --------------------------
+
+--------------------------- $syntyp --------------------------
 
 Emulation done for $syntyp/$emuMethod.  
 
 ";
 
 
-print "  -----------------------------------------------------------------
+print "-----------------------------------------------------------------
+
 
 ";
 

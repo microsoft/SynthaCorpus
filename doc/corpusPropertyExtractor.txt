@@ -1,0 +1,80 @@
+*** Some of the below is written from memory – I need to confirm it from the code ***
+*** Also, we should format it properly, and add other details of how the propertyExtractor works! ***
+
+Currently, corpusPropertyExtractor.exe produces five files for each different term type:
+
+<corpus>_bigrams.plot
+<corpus>_bigrams.segdat
+<corpus>_bigrams.termids
+<corpus>_bigrams.tfd
+<corpus>_bigrams.tsv
+<corpus>_ngrams.plot
+<corpus>_ngrams.segdat
+<corpus>_ngrams.termids
+<corpus>_ngrams.tfd
+<corpus>_ngrams.tsv
+<corpus>_repetitions.plot
+<corpus>_repetitions.segdat
+<corpus>_repetitions.termids
+<corpus>_repetitions.tfd
+<corpus>_repetitions.tsv
+<corpus>_vocab.plot
+<corpus>_vocab.segdat
+--------------------   termids not produced for vocab
+<corpus>_vocab.tfd
+<corpus>_vocab.tsv
+
+Ideally it would produce the same five variants for cooccurs too.  Here are descriptions of the five variants for each type of term:
+
+.plot – data points in log-log space for plotting, e.g 
+#Log10(freq) v. Log10(rank) data for c:/Users/dahawkin/GIT/SynthaCorpus/Experiments/Emulation/Piecewise/markov-5e_dlhisto_ngrams3/PG.
+#Log10(rank)  Log10(freq).
+0.0000000000 4.9634194650
+
+               Note: There are potentially way too many points to plot if all the terms are included.  Therefore this file contains only a sample of points, chosen such that each point is at least epsilon away (in log log space) from the last one.
+
+.segdat – line segments for fitting the compound  term frequency distribution
+#Segments for fitting the data for c:/Users/dahawkin/GIT/SynthaCorpus/Experiments/Emulation/Piecewise/markov-5e_dlhisto_ngrams3/PG.
+# Consists of x0 y0NLx1 y1 pairs of lines interspersed with blank lines
+# gnuplot interprets blank lines as meaning the end of a discrete line seg.
+1.0413926852 4.0692609863
+1.3802112417 3.8081434258
+
+1.3979400087 3.8053649075
+1.7075701761 3.6459132750
+
+               Note: I believe that the .plot data is the data to which these line segments are fitted.
+
+
+.termids – the compound terms data fed to corpusGenerator.exe (currently it only accepts ngrams data)
+N(19,19):434 -- "a a"
+N(19,180):451 -- "a abb"
+N(19,216):248 -- "a about"
+N(19,1334):28 -- "a accustom"
+N(19,1320):12 -- "a affirmations"  -- N means Ngrams, 19 and 1320 are term numbers, 12 is frequency of occurrence and the rest is just explanation
+
+               Note: Lines are in alphabetic order.  They are only present if the compound has been determined to be significant.
+
+.tfd – the model of the term frequency distribution for this type of term (in the form of corpusGenerator options
+#Type of file from which this was derived: _bigrams
+#Option names correspond to generateACorpus.exe
+#Note:  zipf_alpha shown below is for the line connecting the extreme points of the middle segment - not for best fit.
+#Head_terms: 10
+#Piecewise_segments: 10
+-synth_postings=6836827  # Total of all the frequencies
+-synth_vocab_size=24616
+-zipf_tail_perc=0.000000  # Number of terms with freq. 1
+-head_term_percentages=1.344513,0.514800,0.359728,0.299598,0.221272,0.212189,0.211706,0.199625,0.192794,0.178767
+#Combined_head_term_probability: 0.0373499286
+-zipf_alpha=-0.9162
+-zipf_middle_pieces=-0.7707,11,24,0.0164238469,0.0537737755%-0.5150,25,51,0.0209089684,0.0746827439%-0.5734,52,111,0.0306155180,0.1052982619%-0.6726,112,241,0.0418034565,0.1471017184%-0.8371,242,520,0.0487119244,0.1958136428%-0.8241,521,1125,0.0571655536,0.2529791963%-1.0201,1126,2434,0.0596124489,0.3125916452%-1.1383,2435,5263,0.0563603555,0.3689520007%-1.3265,5264,11382,0.0475701667,0.4165221674%-1.5081,11383,24616,0.0336745394,0.4501967067%
+
+.tsv – List in alpha
+a a     434     0
+a abb   451     0
+a about 248     0
+a accustom      28      0
+a affirmations  12      0
+
+Note: The same lines in the same order as .termids but in the format of term TAB total frequency TAB df.   I’m not sure why the dfs are zero for the compound terms.
+

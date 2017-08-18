@@ -42,6 +42,10 @@ run("$converter ../ProjectGutenberg/*.txt > ../Experiments/PG.STARC");
 if (defined($thorough)) {
     print "Running a thorough series of emulations ...\n";
     run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind");
+    run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=neither");
+    run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=base");
+    run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=mimic");
+    run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=both");
     run("$perl ./emulateARealCorpus.pl PG Copy from_tsv dlhisto ngrams2");
     run("$perl ./emulateARealCorpus.pl PG Piecewise base26 dlhisto ind");
     run("$perl ./emulateARealCorpus.pl PG Piecewise base26 dlnormal ind");

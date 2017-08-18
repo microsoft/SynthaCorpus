@@ -66,7 +66,7 @@ char *fileTypes[] = {
 
 
 
-static void initialiseGlobals(globals_t *globals) {
+static void initialiseGlobals(params_t *params, globals_t *globals) {
   globals->startTime = what_time_is_it();
   globals->numDocs = 0;
   globals->numEmptyDocs = 0;
@@ -75,12 +75,17 @@ static void initialiseGlobals(globals_t *globals) {
   globals->gVocabHash =
     dahash_create((u_char *)"globalVocab", 24, MAX_WORD_LEN, 2 * sizeof(wordCounter_t),
 		  (double)0.9, FALSE);
-  globals->gNgramHash =
-    dahash_create((u_char *)"globalNgram", 24, MAX_NGRAM_LEN, 2 * sizeof(wordCounter_t),
-		  (double)0.9, FALSE);  // By definition, occurrence freq and df are identical
-  globals->gWordRepsHash =
-    dahash_create((u_char *)"globalwordReps", 24, MAX_REPETITION_LEN, sizeof(wordCounter_t),
-		  (double)0.9, FALSE);
+  if (!params->ignoreDependencies) {
+    globals->gNgramHash =
+      dahash_create((u_char *)"globalNgram", 24, MAX_NGRAM_LEN, 2 * sizeof(wordCounter_t),
+		    (double)0.9, FALSE);  // By definition, occurrence freq and df are identical
+    globals->gWordRepsHash =
+      dahash_create((u_char *)"globalwordReps", 24, MAX_REPETITION_LEN, sizeof(wordCounter_t),
+		    (double)0.9, FALSE);
+  } else {
+    globals->gVocabHash = NULL;
+    globals->gWordRepsHash = NULL;
+  }
 
   globals->docWords = dyna_create(256, sizeof(long long));
   globals->distinctDocWords = dyna_create(256, sizeof(double));
@@ -223,7 +228,7 @@ static int processOneDoc(params_t *params, globals_t *globals, char *docText,
     if (htEntry[0]) {    // Entry is used if first byte of key is non-zero
       if (0) printf("transferring entry %lld/%zd\n", e, lVocab->capacity);
       tf = *((wordCounter_t *)(htEntry + lVocab->key_size));
-      if (tf >= 2) {
+      if (!params->ignoreDependencies && tf >= 2) {
 	// store repetition as <word>@<tf>
 	u_ll ltf = (u_ll)tf;
 	char repBuf[MAX_REPETITION_LEN + 1], *r, *w;
@@ -252,8 +257,10 @@ static int processOneDoc(params_t *params, globals_t *globals, char *docText,
   dlHistoEntry = (double *)dyna_get(&(globals->distinctDocWords), (long long) numWords, DYNA_DOUBLE);
   (*dlHistoEntry) += (double)(lVocab->entries_used);
 
-  // Deal with ngrams
-  recordNgramsFromOneDocument(params, globals, docWords, numWords);
+  if (!params->ignoreDependencies) {
+    // Deal with ngrams
+    recordNgramsFromOneDocument(params, globals, docWords, numWords);
+  }
   
   // Accumulate stuff for computing mean and StDev of doc length (Welford's method)
   if (globals->numDocs == 1) {
@@ -561,7 +568,7 @@ int main(int argc, char **argv) {
     **alphabeticPermutation = NULL;
   globals_t globals;
   double timeTaken;
-  int *alphaToFreqMapping;
+  int *alphaToFreqMapping = NULL;
  
   setvbuf(stdout, NULL, _IONBF, 0);
   initialise_unicode_conversion_arrays(FALSE);
@@ -570,7 +577,7 @@ int main(int argc, char **argv) {
   
   initialiseParams(&params);
   printf("Params initialised\n");
-  initialiseGlobals(&globals);   // Includes the hashtables as well as scalar values
+  initialiseGlobals(&params, &globals);   // Includes the hashtables as well as scalar values
   printf("Globals initialised\n");
   for (a = 1; a < argc; a++) {
     assign_one_arg(argv[a], (arg_t *)(&args), &ignore);
@@ -622,31 +629,34 @@ int main(int argc, char **argv) {
   writeSummaryFile(&params, &globals);
   processDocumentLengths(&params, &globals);
 
-  // We need to filter and write the Ngrams and Repetitions files before we
-  // frequency-sort the vocab.  Writing ngrams.termids relies on the
-  // alphabeticPermutation of the vocab to map words to term ranks.
 
-  filterCompoundsHash(&params, &globals, alphabeticPermutation, NGRAMS);
+  if (!params.ignoreDependencies) {
+    // We need to filter and write the Ngrams and Repetitions files before we
+    // frequency-sort the vocab.  Writing ngrams.termids relies on the
+    // alphabeticPermutation of the vocab to map words to term ranks.
 
-  alphaToFreqMapping = CreateAlphaToFreqMapping(alphabeticPermutation, globals.vocabSize); 
-  writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
-			  alphaToFreqMapping, NGRAMS);
-  generateTFDFiles(&params, &globals, &(globals.gNgramHash), NGRAMS);
-  // Filter down to bigrams and do the same thing again
-  filterHigherOrderNgrams(&params, &globals, 2);
-  writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
-			  alphaToFreqMapping, BIGRAMS);
-  generateTFDFiles(&params, &globals, &(globals.gNgramHash), BIGRAMS);
-  dahash_destroy(&(globals.gNgramHash));
+    filterCompoundsHash(&params, &globals, alphabeticPermutation, NGRAMS);
 
-  // Deal with the Repetitions
-  if (1) printf("About to start on repetitions\n");
-  filterCompoundsHash(&params, &globals, alphabeticPermutation, TERM_REPS);
+    alphaToFreqMapping = CreateAlphaToFreqMapping(alphabeticPermutation, globals.vocabSize); 
+    writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
+			    alphaToFreqMapping, NGRAMS);
+    generateTFDFiles(&params, &globals, &(globals.gNgramHash), NGRAMS);
+    // Filter down to bigrams and do the same thing again
+    filterHigherOrderNgrams(&params, &globals, 2);
+    writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
+			    alphaToFreqMapping, BIGRAMS);
+    generateTFDFiles(&params, &globals, &(globals.gNgramHash), BIGRAMS);
+    dahash_destroy(&(globals.gNgramHash));
+
+    // Deal with the Repetitions
+    if (1) printf("About to start on repetitions\n");
+    filterCompoundsHash(&params, &globals, alphabeticPermutation, TERM_REPS);
 	       
-  writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
-			  alphaToFreqMapping, TERM_REPS);
-  generateTFDFiles(&params, &globals, &(globals.gWordRepsHash), TERM_REPS);
-  dahash_destroy(&(globals.gWordRepsHash));
+    writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
+			    alphaToFreqMapping, TERM_REPS);
+    generateTFDFiles(&params, &globals, &(globals.gWordRepsHash), TERM_REPS);
+    dahash_destroy(&(globals.gWordRepsHash));
+  }
   
 
   // Finally deal with the vocab.
@@ -655,12 +665,15 @@ int main(int argc, char **argv) {
 
 
   free(alphabeticPermutation);
-  free(alphaToFreqMapping);
   fclose(globals.docTable);
   unmmap_all_of(globals.inputInMemory, globals.inputFH, globals.inputMH,
 		globals.inputSize);
-  dahash_destroy(&(globals.gNgramHash));
-  dahash_destroy(&(globals.gWordRepsHash));
+
+  if (!params.ignoreDependencies) {
+    dahash_destroy(&(globals.gNgramHash));
+    dahash_destroy(&(globals.gWordRepsHash));
+    free(alphaToFreqMapping);
+ }
 
 
   printf("%s: All done.  Output in %s_*\n", argv[0], params.outputStem);

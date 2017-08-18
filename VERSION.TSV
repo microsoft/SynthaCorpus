@@ -1,3 +1,4 @@
 #VERSION	RELEASE_DATE	COMMENTS
+1.01		17 Aug	2017	Adding option to suppress (memory intensive) extraction of dependency properties
 1.0		05 June 2017	Initial release
 

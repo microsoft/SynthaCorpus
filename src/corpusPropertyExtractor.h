@@ -8,7 +8,7 @@ typedef struct {
   char *outputStem;
   int headTerms, piecewiseSegments, minNgramWords, maxNgramWords;
   double zScoreCriterion;
-  BOOL separatelyReportBigrams;
+  BOOL ignoreDependencies, separatelyReportBigrams;
   int ngramObsThresh;
 } params_t;
 
