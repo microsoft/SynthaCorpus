@@ -213,7 +213,7 @@ for ($i = 1; $i <= $num_iters; $i++) { # This loop enumerates iterations, but ea
 		    if $?;
 		die "Can't match doc selector output\n$rslts"
 		    unless $rslts =~ m@SelectHeadRecords: ([0-9]+) lines output.@s;
-		$fields[2] = $1;
+		# $fields[2] = $1; # Don't do this cos it should be added and it's done later anyway
 	    } else {
 		$proportion = $fields[0] / 100;
 		$cmd = "$docSelector $corpusFile $workingDir/$corpusName$fileType random $proportion";
@@ -222,7 +222,7 @@ for ($i = 1; $i <= $num_iters; $i++) { # This loop enumerates iterations, but ea
 		    if $?;
 		die "Can't match doc selector output\n$rslts"
 		    unless $rslts =~ m@SelectRandomRecords: ([0-9]+) /@s;
-		$fields[2] = $1;
+		# $fields[2] = $1; # Don't do this cos it should be added and it's done later anyway
 	    }
 	    
 	    # ----------------- 2. Extract the properties of the sample ------------------------------------------------
@@ -383,7 +383,7 @@ sub generate_plots {
     $pr = "${plotdir}/${prefix2}" . $corpusName . ".raw";
     die "Can't write to $pr\n" unless open PR, ">$pr";
     print PR "# This file shows the raw values for each variable for each sample or subset size.
-#  Where appropriate the values are averaged across multiple samples of the same size.\n";
+    #  Where appropriate the values are averaged across multiple samples of the same size.\n";
 
 
     for (my $i = $num_iters; $i > 0; $i--)  {# Counting down.  I.e. increasing the size of the sample
@@ -395,6 +395,7 @@ sub generate_plots {
 	$nobs = $f[1];
 	$nobs = 1 if $nobs < 1;
 	for (my $j = 2; $j < ($columns - 2); $j++) {  # Last two columns are text
+	    print "  Col $j:  $f[$j] / $nobs\n";
 	    $f[$j] = sprintf("%.4f", $f[$j]/$nobs);
 	}
 
