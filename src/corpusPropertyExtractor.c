@@ -22,6 +22,8 @@
 // is complete.  Global hash tables gNgramHash and gRepetitionsHash
 // record occurrence frequencies of repeated terms.
 //
+// Note: there are some notes about the format of files produced by
+// corpusPropertyExtractor.exe in ../doc/corpusPropertyExtractor.txt
 
 #ifdef WIN64
 #include <windows.h>
@@ -117,19 +119,19 @@ static int cmp_freq(const void *ip, const void *jp) {
 }
 
 
-static int *CreateAlphaToFreqMapping(char **alphabeticPermutation,
+static int *CreateAlphaToRankMapping(char **alphabeticPermutation,
 					 int vocabSize) {
   // If we look up a term using alphabeticPermutation, we get its
   // index in the alphabetic ordering of terms.  This function gives
   // us a mapping which allows us to turn that index into a termid,
   // i.e. the term's rank within the descending frequency ordering.
-  int *permute = NULL, *alphaToFreqMapping = NULL, t;
+  int *permute = NULL, *alphaToRankMapping = NULL, t;
   double start;
 
   start = what_time_is_it();
-  permute = cmalloc(vocabSize * sizeof(int), "CreateAlphaToFreqMapping1", FALSE);
-  freqs = cmalloc(vocabSize * sizeof(wordCounter_t), "CreateAlphaToFreqMapping2", FALSE);
-  alphaToFreqMapping = cmalloc(vocabSize * sizeof(int), "CreateAlphaToFreqMapping3", FALSE);
+  permute = cmalloc(vocabSize * sizeof(int), "CreateAlphaToRankMapping1", FALSE);
+  freqs = cmalloc(vocabSize * sizeof(wordCounter_t), "CreateAlphaToRankMapping2", FALSE);
+  alphaToRankMapping = cmalloc(vocabSize * sizeof(int), "CreateAlphaToRankMapping3", FALSE);
   for (t = 0; t < vocabSize; t++) {
     permute[t] = t;
     freqs[t] = *((wordCounter_t *)(alphabeticPermutation[t] + MAX_WORD_LEN + 1));
@@ -138,18 +140,18 @@ static int *CreateAlphaToFreqMapping(char **alphabeticPermutation,
   qsort(permute, vocabSize, sizeof(int), cmp_freq);   
 
   // permute is now a mapping from rank in the freq sorted list to alphabetic rank
-  // Create alphaToFreqMapping by reversing this
+  // Create alphaToRankMapping by reversing this
   for (t = 0; t < vocabSize; t++) {
-    alphaToFreqMapping[permute[t]] = t + 1;  // +1 so that the termids start at rank 1, not 0
+    alphaToRankMapping[permute[t]] = t + 1;  // +1 so that the termids start at rank 1, not 0
   }
 
   free(permute);
   free(freqs);
   permute = NULL;
   freqs = NULL;
-  printf("Created alphaToFreqMapping for vocab: %d entries.  Elapsed time %.3f sec.\n",
+  printf("Created alphaToRankMapping for vocab: %d entries.  Elapsed time %.3f sec.\n",
 	 vocabSize, what_time_is_it() - start);
-  return alphaToFreqMapping;
+  return alphaToRankMapping;
 }
 
 
@@ -419,18 +421,21 @@ static int cmpPermuteDFV(const void *ip, const void *jp) {
 }
 
 
-
-
-static void writeVocabTSV(globals_t *globals, char ***alphabeticPermutation) {
+static void writeVocabTSV(globals_t *globals, char ***alphabeticPermutation,
+			  int **alphaToRankMapping) {
   // vocab.tsv will be written in alphabetic order and an alphabetic
   // permutation will be returned, i.e. an array of pointers to hash
   // table entries ordered by alphabetic order of the keys of those
-  // entries
+  // entries.
+  // Also returned is a mapping from index within the alphabetic permutation
+  // to rank within the frequency sorted permutation of the words
+  
   long long e, p = 0;
   wordCounter_t *valPtr, occFreq;
   off_t htOff;
   char *htEntry, **permute = NULL;
   double startTime;
+  int *rankMapping = NULL;
   
   globals->totalPostings = 0;
   globals->longestPostingsListLength = 0;
@@ -447,15 +452,19 @@ static void writeVocabTSV(globals_t *globals, char ***alphabeticPermutation) {
     }
     htOff += globals->gVocabHash->entry_size;
   }
+  globals->vocabSize = p;
 
   startTime = what_time_is_it();
   printf("Qsorting %lld entries in global vocabulary in alphabetical order ... ", p);
   qsort(permute, p, sizeof(char *), cmpPermuteAA);
   printf("%.3f sec. elapsed.\n", what_time_is_it() - startTime);
+
+  rankMapping = CreateAlphaToRankMapping(permute, globals->vocabSize); 
+  
   for (e = 0; e < p; e++) {
     valPtr = (wordCounter_t *)(permute[e] + MAX_WORD_LEN + 1);
-    fprintf(globals->vocabTSV, "%s\t%lld\t%lld\n", permute[e],
-	    *valPtr, *(valPtr + 1));
+    fprintf(globals->vocabTSV, "%s\t%lld\t%lld\t%d\n", permute[e],
+	    *valPtr, *(valPtr + 1), rankMapping[e]);
     occFreq = *valPtr;   // occurrence frequency comes first, then DF
     globals->totalPostings += occFreq;
     if (occFreq > globals->longestPostingsListLength)
@@ -464,8 +473,8 @@ static void writeVocabTSV(globals_t *globals, char ***alphabeticPermutation) {
   fclose(globals->vocabTSV);
 
   // Set up the return values
-  globals->vocabSize = p;
   *alphabeticPermutation = permute;
+  *alphaToRankMapping = rankMapping;
 }
 
 
@@ -562,13 +571,14 @@ static void writeSummaryFile(params_t *params, globals_t *globals) {
   fclose(SUMRY);
 }
 
+
 int main(int argc, char **argv) {
   int a, error_code;
   char *ignore, ASCIITokenBreakSet[] = DFLT_ASCII_TOKEN_BREAK_SET,
     **alphabeticPermutation = NULL;
   globals_t globals;
   double timeTaken;
-  int *alphaToFreqMapping = NULL;
+  int *alphaToRankMapping = NULL;
  
   setvbuf(stdout, NULL, _IONBF, 0);
   initialise_unicode_conversion_arrays(FALSE);
@@ -624,7 +634,7 @@ int main(int argc, char **argv) {
   // Now dump the vocab.tsv file in alphabetic order
   printf("About to dump _vocab.tsv file\n");
   
-  writeVocabTSV(&globals, &alphabeticPermutation);
+  writeVocabTSV(&globals, &alphabeticPermutation, &alphaToRankMapping);
   writeVocabByFreqTSV(&params, &globals, alphabeticPermutation);
   writeSummaryFile(&params, &globals);
   processDocumentLengths(&params, &globals);
@@ -637,14 +647,13 @@ int main(int argc, char **argv) {
 
     filterCompoundsHash(&params, &globals, alphabeticPermutation, NGRAMS);
 
-    alphaToFreqMapping = CreateAlphaToFreqMapping(alphabeticPermutation, globals.vocabSize); 
     writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
-			    alphaToFreqMapping, NGRAMS);
+			    alphaToRankMapping, NGRAMS);
     generateTFDFiles(&params, &globals, &(globals.gNgramHash), NGRAMS);
     // Filter down to bigrams and do the same thing again
     filterHigherOrderNgrams(&params, &globals, 2);
     writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
-			    alphaToFreqMapping, BIGRAMS);
+			    alphaToRankMapping, BIGRAMS);
     generateTFDFiles(&params, &globals, &(globals.gNgramHash), BIGRAMS);
     dahash_destroy(&(globals.gNgramHash));
 
@@ -653,7 +662,7 @@ int main(int argc, char **argv) {
     filterCompoundsHash(&params, &globals, alphabeticPermutation, TERM_REPS);
 	       
     writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,
-			    alphaToFreqMapping, TERM_REPS);
+			    alphaToRankMapping, TERM_REPS);
     generateTFDFiles(&params, &globals, &(globals.gWordRepsHash), TERM_REPS);
     dahash_destroy(&(globals.gWordRepsHash));
   }
@@ -672,7 +681,7 @@ int main(int argc, char **argv) {
   if (!params.ignoreDependencies) {
     dahash_destroy(&(globals.gNgramHash));
     dahash_destroy(&(globals.gWordRepsHash));
-    free(alphaToFreqMapping);
+    free(alphaToRankMapping);
  }
 
 
