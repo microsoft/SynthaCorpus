@@ -36,11 +36,16 @@ run("make") if (!$useVS);
 
 $converter = check_exe("convertPGtoSTARC.exe");
 $queryGen = check_exe("queryGenerator.exe");
+$queryLogEmulator = check_exe("queryLogEmulator.exe");
 
+$step = 1;
 
+print "\n\n\nStep $step:   Convert Project Gutenberg (PG) files into a STARC\n";  $step++;
 run("$converter ../ProjectGutenberg/*.txt > ../Experiments/PG.STARC");
+
+# If specified, run a series of PG emulations
 if (defined($thorough)) {
-    print "Running a thorough series of emulations ...\n";
+    print "\n\n\nStep $step:   Running a thorough series of emulations ...\n";  $step++;
     run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind");
     run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=neither");
     run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=base");
@@ -58,10 +63,21 @@ if (defined($thorough)) {
     sleep 3;
 }
 
+print "\n\n\nStep $step:   Always do at least one emulation of PG\n";  $step++;
 run("$perl ./emulateARealCorpus.pl PG Piecewise markov-5e dlhisto ngrams3");
+
+print "\n\n\nStep $step:    Run the Azzopardi-et-al inspired query generator on both the Base corpus and the always-done emulation of it\n"; $step++;
 run("$queryGen corpusFileName=../Experiments/PG.STARC propertiesStem=../Experiments/Base/PG  -numQueries=1000");
 run("$queryGen corpusFileName=../Experiments/Emulation/Piecewise/markov-5e_dlhisto_ngrams3/PG.starc propertiesStem=../Experiments/Emulation/Piecewise/markov-5e_dlhisto_ngrams3/PG  -numQueries=1000");
+
+print "\n\n\nStep $step:    Now use the Azzopardi-et-al queries for Base as though they were a query log and emulate it.\n"; $step++;
+copy_first_column("../Experiments/Base/PG.q", "../Experiments/Base/PG.qlog");
+run("$queryLogEmulator baseStem=../Experiments/Base/PG emuStem=../Experiments/Emulation/Piecewise/markov-5e_dlhisto_ngrams3/PG");
+
+print "\n\n\nStep $step:     Run the corpus sampling script to build up a growth model\n";  $step++;
 run("$perl ./samplingExperiments.pl PG");
+
+print "\n\n\nStep $step:     Use the growth model to scale up a small sample of PG by two orders of magnitude.\n";  $step++;
 run("$perl ./scaleUpASample.pl PG 100 Linear markov-5e dlnormal ind");
 run("$queryGen corpusFileName=../Experiments/Scalingup/Working/PG.tsv propertiesStem=../Experiments/Scalingup/Working/PG  -numQueries=1000");
 
@@ -120,4 +136,29 @@ sub run {
     my $code = system($cmd);
     die "Command $cmd failed with code $code\n"
 	if ($code);
+}
+
+
+sub copy_first_column {
+    $src = shift;
+    $dest = shift;
+
+    # Copy first column (i.e. up to first TAB) of $src to  $dest
+    # Don't copy if the field is empty
+    # Copy the whole line if there's no TAB
+
+    die "Can't read $src\n"
+	unless open SRC, $src;
+    die "Can't write to $dest\n"
+	unless open DEST, ">$dest";
+
+    while (<SRC>) {
+	if (/([^\t]+)(\t|\r|\m)/) {
+	    $tocopy = $1;
+	    print DEST $tocopy, "\n"
+		unless length($tocopy) <= 0;
+	}
+    }
+    close(SRC);
+    close(DEST);
 }

@@ -191,8 +191,10 @@ int main(int argc, char **argv) {
 								 (u_char **)&(globals.baseVocabInMemory),
 								 &(globals.bvSize));
   // Open the query infile
+  strcpy(fnameBuffer, params.baseStem);
   strcpy(fnameBuffer + strlen(params.baseStem), ".qlog");
   globals.queryInfile = fopen(fnameBuffer, "rb");
+  if (params.verbose) printf("Input file = %s\n", fnameBuffer);
 
   strcpy(fnameBuffer, params.emuStem);
   strcpy(fnameBuffer + strlen(params.emuStem), "_vocab_by_freq.tsv");
@@ -214,7 +216,7 @@ int main(int argc, char **argv) {
     lineLen = strlen(fgetsBuf);
     while (fgetsBuf[lineLen -1] < ' ') lineLen--;  // Strip trailing newlines, CRs etc
     fgetsBuf[lineLen] = 0;
-    if (1) printf("Input query: %s\n", fgetsBuf);
+    if (params.verbose) printf("Input query: %s\n", fgetsBuf);
     qCount++;
     queryLength = utf8_split_line_into_null_terminated_words((byte *)fgetsBuf, lineLen,
 							     (byte **)&wordStarts,
@@ -224,9 +226,9 @@ int main(int argc, char **argv) {
     for (q = 0; q < queryLength; q++) {  // Loop over words in query
       // Look up wordStarts[q] in base vocab and extract its rank r
       // print the word at rank r in the emu vocab.
-      if (1) printf("   --- looking at word %s\n", wordStarts[q]);
+      if (params.verbose) printf("   --- looking at word %s\n", wordStarts[q]);
       rank = getRankInBase(&globals, wordStarts[q]);
-      if (1) printf("   --- it's at rank %d\n", rank);
+      if (params.verbose) printf("   --- it's at rank %d\n", rank);
       if (rank >= globals.emuVocabLineCount) {
 	printf("Error:  rank %d too high (> %d)\n", rank, globals.emuVocabLineCount);
 	exit(1);

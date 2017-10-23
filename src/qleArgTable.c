@@ -17,6 +17,7 @@
 arg_t args[] = {
   { "baseStem", ASTRING, (void *)&(params.baseStem), "The names of all the files containing extracted properties and the query file (.q) for the base collection will share this prefix."},
   { "emuStem", ASTRING, (void *)&(params.emuStem), "The names of all the files containing extracted properties and the output query file (.q) for the emulated collection will share this prefix."},
+  { "verbose", ABOOL, (void *)&(params.verbose), "If TRUE, each action taken will be reported."},
 
   { "", AEOL, NULL, "" }
   };
@@ -25,6 +26,7 @@ arg_t args[] = {
 void initialiseParams() {
   params.baseStem = NULL;
   params.emuStem = NULL;
+  params.verbose = FALSE;
 }
 
 
