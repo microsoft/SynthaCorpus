@@ -46,7 +46,6 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/param.h>   // For MIN and MAX macros
 #include <time.h>
 #include <fcntl.h>
 #include <math.h>
@@ -69,8 +68,8 @@ static void initialiseGlobals(globals_t *globals) {
 
 
 static int vocabCmp(const void *ip, const  void *jp) {
-  char *i = *((char**)ip), *j = *((char**)jp);
-  // Note:  MUST use u_char
+  u_char *i = *((u_char**)ip), *j = *((u_char**)jp);
+  // Note:  MUST use u_char otherwise comparisons fail
   // String comparison where the string is terminated by any ASCII control including NUL
 
   if (0) {
@@ -81,12 +80,14 @@ static int vocabCmp(const void *ip, const  void *jp) {
     printf("'\n");
   }
    
-  while (*i == *j) {
-    if (*i <= ' ') return 0;  
+  while (*i > ' ' && *j > ' ' && (*i == *j)) {
     i++;  j++;
   }
-  
-  if (*i <= ' ' && *j <= ' ') return 0;  // Terminators may differ
+
+  if (0) printf("  Loop end: *i = %d, *j = %d\n", *i, *j);
+  if (*i <= ' ' && *j <= ' ') return 0;  // Terminators may differ but both ended at the same time
+  if (*j <= ' ') return 1;  // j finished before i did
+  if (*i <= ' ') return -1;  // i finished before j did
 
   if (*i < *j) return -1;
   return 1;
@@ -94,12 +95,12 @@ static int vocabCmp(const void *ip, const  void *jp) {
 
 
 int getRankInBase(globals_t *globals, char *inWord) {
-  char **vocabEntryP, *p, *q;
+  u_char **vocabEntryP, *p, *q;
   int rank, field;
 
   if (0) printf("About to look up %s among %d entries\n",
 		inWord, globals->baseVocabLineCount);
-  vocabEntryP = (char **)bsearch(&inWord, globals->baseVocabLines,
+  vocabEntryP = (u_char **)bsearch(&inWord, globals->baseVocabLines,
 				 globals->baseVocabLineCount,
 				 sizeof(char *), vocabCmp);
   if (vocabEntryP == NULL) {
@@ -115,7 +116,7 @@ int getRankInBase(globals_t *globals, char *inWord) {
   // third one.
   for (field = 2; field < 5; field++) {
     errno = 0;
-    rank = strtod(p, &q);
+    rank = strtod(p, (char **)&q);
     if (errno) printf("Error reading field %d in Base vocab\n", field);
     if (*q == '\t') p = q + 1;
     else if (*q < ' ' && field !=4) {
@@ -145,7 +146,7 @@ static void printUsage(char *progName, char *msg, arg_t *args) {
 
 
 int main(int argc, char **argv) {
-  int a, q, queryLength, qCount, rank;
+  int a, q, queryLength, rank, qCount = 0, printerval = 10;
   double aveQueryLength = 0.0, startTime, generationStarted, generationTime, overheadTime;
   char *outWord, *fnameBuffer, ASCIITokenBreakSet[] = DFLT_ASCII_TOKEN_BREAK_SET,
     *p, *ignore;
@@ -181,7 +182,8 @@ int main(int argc, char **argv) {
 
 
   // Map the vocab.tsv files as arrays of lines 
-  stemLen = MAX(strlen(params.baseStem), strlen(params.emuStem));
+  stemLen = strlen(params.emuStem);
+  if (strlen(params.baseStem) > stemLen) stemLen = strlen(params.baseStem);
   fnameBuffer = (char *)cmalloc(stemLen + 100, "fnameBuffer", FALSE);
   
   strcpy(fnameBuffer, params.baseStem);
@@ -218,6 +220,11 @@ int main(int argc, char **argv) {
     fgetsBuf[lineLen] = 0;
     if (params.verbose) printf("Input query: %s\n", fgetsBuf);
     qCount++;
+    if (qCount % printerval == 0) {
+      printf("   --- Progress %s: %d queries generated ---  Average time per query: %.3f sec.\n",
+	     fnameBuffer, qCount, (what_time_is_it() - generationStarted) / (double)qCount);
+      if (qCount % (printerval * 10) == 0) printerval *= 10;
+    }
     queryLength = utf8_split_line_into_null_terminated_words((byte *)fgetsBuf, lineLen,
 							     (byte **)&wordStarts,
 							     500, MAX_WORD_LEN,

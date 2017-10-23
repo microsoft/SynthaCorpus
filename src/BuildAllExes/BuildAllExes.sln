@@ -19,6 +19,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "queryGenerator", "..\queryG
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "selectRecordsFromFile", "..\selectRecordsFromFile\selectRecordsFromFile.vcxproj", "{3F809DB6-02FE-49F0-B268-0896A46A0B52}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "queryLogEmulator", "..\queryLogEmulator\queryLogEmulator.vcxproj", "{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -91,6 +93,14 @@ Global
 		{3F809DB6-02FE-49F0-B268-0896A46A0B52}.Release|x64.Build.0 = Release|x64
 		{3F809DB6-02FE-49F0-B268-0896A46A0B52}.Release|x86.ActiveCfg = Release|Win32
 		{3F809DB6-02FE-49F0-B268-0896A46A0B52}.Release|x86.Build.0 = Release|Win32
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Debug|x64.ActiveCfg = Debug|x64
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Debug|x64.Build.0 = Debug|x64
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Debug|x86.ActiveCfg = Debug|Win32
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Debug|x86.Build.0 = Debug|Win32
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Release|x64.ActiveCfg = Release|x64
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Release|x64.Build.0 = Release|x64
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Release|x86.ActiveCfg = Release|Win32
+		{759F5C28-9DE9-46BB-8D49-A0F155F6D9EC}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

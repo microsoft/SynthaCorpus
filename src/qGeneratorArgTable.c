@@ -20,6 +20,7 @@ arg_t args[] = {
   { "numQueries", AINT, (void *)&(params.numQueries), "How many queries to generate."},
   { "meanQueryLength", AFLOAT, (void *)&(params.meanQueryLength), "Mean of truncated normal distribution of query lengths. Standard deviation will be half this value."},
    { "minWordsInTargetDoc", AINT, (void *)&(params.minWordsInTargetDoc), "Known-item targets must have at least this number of distinct words (and at least as many as the query)."},
+  { "verbose", ABOOL, (void *)&(params.verbose), "If TRUE, each action taken will be reported."},
  
   { "", AEOL, NULL, "" }
   };
@@ -31,6 +32,7 @@ void initialiseParams() {
   params.numQueries = 10;
   params.meanQueryLength = 5;
   params.minWordsInTargetDoc = 5;
+  params.verbose = FALSE;
 }
 
 

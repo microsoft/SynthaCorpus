@@ -57,8 +57,8 @@ static void initialiseGlobals(globals_t *globals) {
 
 
 static int vocabCmp(const void *ip, const  void *jp) {
-  char *i = *((char**)ip), *j = *((char**)jp);
-  // Note:  MUST use u_char
+  u_char *i = *((u_char**)ip), *j = *((u_char**)jp);
+  // Note:  MUST use u_char otherwise comparisons fail
   // String comparison where the string is terminated by any ASCII control including NUL
 
   if (0) {
@@ -69,17 +69,23 @@ static int vocabCmp(const void *ip, const  void *jp) {
     printf("'\n");
   }
    
-  while (*i == *j) {
-    if (*i <= ' ') return 0;  
+  while (*i > ' ' && *j > ' ' && (*i == *j)) {
     i++;  j++;
   }
-  if (*i <= ' ' && *j <= ' ') return 0;  // Terminators may differ
-  return 0;
+
+  if (0) printf("  Loop end: *i = %d, *j = %d\n", *i, *j);
+  if (*i <= ' ' && *j <= ' ') return 0;  // Terminators may differ but both ended at the same time
+  if (*j <= ' ') return 1;  // j finished before i did
+  if (*i <= ' ') return -1;  // i finished before j did
+
+  if (*i < *j) return -1;
+  return 1;
 }
 
 
-static void assign_wordScores(globals_t *globals, char **docWords, double *wordScores,
-			      wordCounter_t *tf, int numWords) {
+
+static void assign_wordScores(globals_t *globals, params_t *params, char **docWords,
+			      double *wordScores, wordCounter_t *tf, int numWords) {
   // globals->vocabTSV is an array of globals->vocabLine strings sorted in alphabetic order
   //  - each string includes tab-separated total occurrence frequency and DF.
   // docWords is an array of size numWords, contain all of the distinct words in the document
@@ -87,15 +93,15 @@ static void assign_wordScores(globals_t *globals, char **docWords, double *wordS
   // document.
   // Output is in the pre-allocated array of wordScores.
   int w;
-  char **vocabEntryP, *p, *q;
+  u_char **vocabEntryP, *p, *q;  // MUST be unsigned!!
   double occFreq, sumProbs = 0.0, sumScores = 0.0, this, thusFar;
 #if 0
   double df;
 #endif
   // look up each document word in the vocabulary table and get its df.
   for (w = 0; w < numWords; w++) {
-    if (0) printf("Looking up '%s' %d among %d words\n", docWords[w], w, numWords);
-    vocabEntryP = (char **)bsearch(docWords + w, globals->vocabTSV, globals->vocabLines,
+    if (params->verbose) printf("Looking up '%s' %d among %d words\n", docWords[w], w, numWords);
+    vocabEntryP = (u_char **)bsearch(docWords + w, globals->vocabTSV, globals->vocabLines,
 				 sizeof(char *), vocabCmp);
     if (vocabEntryP == NULL) {
       printf("Lookup of '%s' failed\n", docWords[w]);
@@ -106,15 +112,18 @@ static void assign_wordScores(globals_t *globals, char **docWords, double *wordS
     while (*p > ' ') p++;
     p++;  // Skip the tab
     errno = 0;
-    occFreq = strtod(p, &q);
-    if (errno) printf("Error reading occFreq\n");
+    occFreq = strtod(p, (char **)&q);
+    if (errno  || occFreq <= 0.0) {
+      printf("Error reading occFreq for '%s'\n", docWords[w]);
+      exit(1);
+    }
 
 #if 0
     // Leif's method doesn't use DF or TF 
     p = q + 1;
     errno = 0;
     df = strtod(p, &q);
-    if (0) printf("occFreq = %.0f, df = %.0f, tf = %lld\n", occFreq, df, tf[w]);
+    if (params->verbose) printf("occFreq = %.0f, df = %.0f, tf = %lld\n", occFreq, df, tf[w]);
     if (errno) printf("Error reading df\n");
 #endif
    
@@ -122,6 +131,11 @@ static void assign_wordScores(globals_t *globals, char **docWords, double *wordS
     // 
     wordScores[w] = 1.0 / occFreq;  // Partially computed value
     sumProbs += wordScores[w];
+  }
+
+  if (sumProbs <= 0.0) {
+    printf("Error: zero sumProbs for '%s'\n", docWords[w]);
+    exit(1);
   }
 
   // We should multiply the interim wordScores by P / sumOccFreqs, where P is the total number
@@ -132,7 +146,7 @@ static void assign_wordScores(globals_t *globals, char **docWords, double *wordS
     sumScores += wordScores[w];
   }
 
-  if (0) printf("SumScores = %.4f\n", sumScores);
+  if (params->verbose) printf("SumScores = %.4f\n", sumScores);
   // Now turn the wordScores into cumulative probabilities
   thusFar = 0.0;
   for (w = 0; w < numWords; w++) {
@@ -150,13 +164,13 @@ static void pickTargetAndOutputAQuery(globals_t *globals, params_t *params, int 
   long long docOff, docBytes, numWords;
   char *docText;
   dahash_table_t *lVocab = NULL;
-  BOOL happy = FALSE, verbose = FALSE;
+  BOOL happy = FALSE;
   
   do {  // Loop until we're happy with the selection
     chosenDoc = (int)floor(rand_val(0) * globals->dtLines);
-    if (0) printf("Chose document %d out of %d\n", chosenDoc, globals->dtLines);
+    if (params->verbose) printf("Chose document %d out of %d\n", chosenDoc, globals->dtLines);
     sscanf(globals->docTable[chosenDoc], "%lld %lld %lld", &docOff, &docBytes, &numWords);
-    if (0) printf("  offset = %lld, bytes = %lld, words = %lld\n", docOff, docBytes, numWords);
+    if (params->verbose) printf("  offset = %lld, bytes = %lld, words = %lld\n", docOff, docBytes, numWords);
     docText = globals->corpusInMemory + docOff;
     memcpy(docCopy, docText, docBytes);
     docCopy[docBytes] = 0;
@@ -174,11 +188,11 @@ static void pickTargetAndOutputAQuery(globals_t *globals, params_t *params, int 
     for (w = 0; w < numWords; w++) {
       counter = (wordCounter_t *)dahash_lookup(lVocab, docWords[w], 1);   // 1 means add key if not already there.
       (*counter)++;
-      if (0) printf("Word %d: %s  %lld\n", w, docWords[w], *counter);
+      if (params->verbose) printf("Word %d: %s  %lld\n", w, docWords[w], *counter);
     }
 
     
-    if (0) printf("  word occurrences found: %lld, distinct words: %zd\n", numWords, lVocab->entries_used);
+    if (params->verbose) printf("  word occurrences found: %lld, distinct words: %zd\n", numWords, lVocab->entries_used);
 
     // If this doc has enough distinct words, choose it as the target and generate a
     // query
@@ -202,30 +216,30 @@ static void pickTargetAndOutputAQuery(globals_t *globals, params_t *params, int 
 	htOff += lVocab->entry_size;
       }
       numDocWords = u;
-      if (0) printf("DocWords array has %d entries. %d query words will be generated\n",
-		    numDocWords, queryLen);
+      if (params->verbose) printf("DocWords array has %d entries. %d query words will be generated\n",
+				  numDocWords, queryLen);
 
-      assign_wordScores(globals, docWords, wordScores, tf, numDocWords);
+      assign_wordScores(globals, params, docWords, wordScores, tf, numDocWords);
 
 
       // Now pick query words based on docScores cumulative probabilities
       qw = 0;
-      if (verbose) printf("Query: ");
+      if (params->verbose) printf("Query: ");
       while (qw < queryLen) {
  	randy = rand_val(0);
 	// Slow linear search - speed up later if nec.
 	for (dw = 0; dw < numDocWords; dw++) {
-	  if (0) printf(" comparing %.5f v. %.5f\n", wordScores[dw], randy);
+	  if (params->verbose) printf(" comparing %.5f v. %.5f\n", wordScores[dw], randy);
 	  if (wordScores[dw] >= randy) break;
 	}
 
-	if (0) printf("randy= %.4f, dw = %d, used[dw] = %d\n",
+	if (params->verbose) printf("randy= %.4f, dw = %d, used[dw] = %d\n",
 		      randy, dw, used[dw]);
 	// Now check that we haven't picked this query word before.
 	if (!used[dw]) {
 	  used[dw] = 1;
 	  fprintf(globals->queryOutfile, "%s ", docWords[dw]);
-	  if (verbose) printf("%s ", docWords[dw]);
+	  if (params->verbose) printf("%s ", docWords[dw]);
 	  qw++;
 	}
       }
@@ -233,7 +247,7 @@ static void pickTargetAndOutputAQuery(globals_t *globals, params_t *params, int 
       memcpy(docCopy, docText, docBytes);  // Do again to avoid all the NULs
       docCopy[docBytes] = 0;
       fprintf(globals->queryOutfile, "\tDoc%d\n", chosenDoc);
-      if (verbose) printf("\tAnswer: Doc%d\n", chosenDoc);
+      if (params->verbose) printf("\tAnswer: Doc%d\n", chosenDoc);
       happy = TRUE;
       free(docWords);
       free(wordScores);
@@ -254,7 +268,7 @@ static void printUsage(char *progName, arg_t *args) {
 
 
 int main(int argc, char **argv) {
-  int a, error_code, q, queryLength , printerval = 10;
+  int a, error_code, q, queryLength, printerval = 10;
   double aveQueryLength = 0.0, startTime, generationStarted, generationTime, overheadTime;
   char *ignore, *fnameBuffer, ASCIITokenBreakSet[] = DFLT_ASCII_TOKEN_BREAK_SET;
   size_t stemLen;

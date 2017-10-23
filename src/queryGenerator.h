@@ -9,6 +9,7 @@ typedef struct {
   int numQueries;
   double meanQueryLength;
   int minWordsInTargetDoc;
+  BOOL verbose;
 } params_t;
 
 extern params_t params;

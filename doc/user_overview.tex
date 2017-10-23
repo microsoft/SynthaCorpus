@@ -135,6 +135,8 @@ At the most fundamental level, the \projectName~ project provides executables fo
 \item Extracting the properties of a text corpus. (\texttt{corpusPropertyExtractor.exe})
 \item Generating a synthetic corpus with specified properties. (\texttt{corpusGenerator.exe})
 \item Generating a set of known item queries from a text corpus. (\texttt{queryGenerator.exe})
+\item Converting a query log for a base text corpus into a 
+  version suitable for running against an emulation of the base. (\texttt{queryLogEmulator.exe})
 \end{enumerate}
 
 It also provides perl scripts to achieve:
@@ -184,13 +186,15 @@ dramatically.
 
 \section{Example usage}
 
-Below are sequences of commands (similar to the content of the
+Below are sequences of commands (similar to part of the content of the
 \texttt{exerciser.pl} script) which create a STARC file from the Project Gutenberg documents,
 emulates it, generates sets of known item queries for the base corpus
 and also the emulated one, runs sampling experiments on the base
 corpus, scales up a 1\% sample and compares the scaled-up sample with
 the original.   The first version uses the executables built by
 \texttt{gcc} and the second those built by Visual Studio 2015.
+
+See the exerciser script for more examples of usage.
  
 \subsection{GCC example}
 
