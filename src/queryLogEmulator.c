@@ -29,6 +29,20 @@
 // corpusPropertyExtractor.exe which lists the vocab in alphabetic order (that's
 // always been the case) and includes a fourth column which specifies the rank of
 // the word in a frequency ordering (that was added around 20 Oct 2017).
+//
+// -------------------------------------------------------------------------
+// Handling of out-of-vocabulary words was improved on around 01 Nov 2017 as
+// follows:
+//
+// A. query word is not within the vocab of the baseStem corpus ---> emit a made-up
+//    word which doesn't occur in the emuStem corpus either.  E.g. 'noexist27'
+// B. Rank of query word in baseStem corpus is higher than the highest possible
+//    rank within emuStem --> Emit a randomly chosen word from the emuStem vocab.
+//
+// Rationale: The proportion of query words which do not exist in a corpus is
+//    the same for both base and emu.  In the initial design, the random choice
+//    is done with uniform probabilities.  It could be that we ought to bias it
+//    according to corpus probabilities or query log probabilities.
 
 
 #ifdef WIN64
@@ -94,7 +108,7 @@ static int vocabCmp(const void *ip, const  void *jp) {
 }
 
 
-int getRankInBase(globals_t *globals, char *inWord) {
+int getRankInBase(globals_t *globals, params_t *params, char *inWord) {
   u_char **vocabEntryP, *p, *q;
   int rank, field;
 
@@ -104,8 +118,8 @@ int getRankInBase(globals_t *globals, char *inWord) {
 				 globals->baseVocabLineCount,
 				 sizeof(char *), vocabCmp);
   if (vocabEntryP == NULL) {
-    printf("Lookup of '%s' failed.  Returning 777\n", inWord);
-    return 777;
+    if (params->verbose) printf("Warning: Lookup of '%s' failed.\n", inWord);
+    return -1;   // Signal failure
   }
 
   p = *vocabEntryP;
@@ -146,13 +160,13 @@ static void printUsage(char *progName, char *msg, arg_t *args) {
 
 
 int main(int argc, char **argv) {
-  int a, q, queryLength, rank, qCount = 0, printerval = 10;
+  int a, q, queryLength, rank, qCount = 0, printerval = 10, noexistNum = 0;
   double aveQueryLength = 0.0, startTime, generationStarted, generationTime, overheadTime;
   char *outWord, *fnameBuffer, ASCIITokenBreakSet[] = DFLT_ASCII_TOKEN_BREAK_SET,
     *p, *ignore;
   size_t lineLen, stemLen;
   globals_t globals;
-  char fgetsBuf[1000];
+  char fgetsBuf[1000], noexist[100] = "noexist";
   byte *wordStarts[500];
 
   startTime = what_time_is_it();
@@ -161,6 +175,7 @@ int main(int argc, char **argv) {
   initialise_ascii_tables(ASCIITokenBreakSet, TRUE);
   if (0) display_ascii_non_tokens();
 
+  rand_val(13);
   initialiseParams();
   printf("Params initialised\n");
   initialiseGlobals(&globals);   // Includes the hashtables as well as scalar values
@@ -221,8 +236,8 @@ int main(int argc, char **argv) {
     if (params.verbose) printf("Input query: %s\n", fgetsBuf);
     qCount++;
     if (qCount % printerval == 0) {
-      printf("   --- Progress %s: %d queries generated ---  Average time per query: %.3f sec.\n",
-	     fnameBuffer, qCount, (what_time_is_it() - generationStarted) / (double)qCount);
+      printf("   --- Progress %s: %d queries generated ---  Average time per query: %.3f msec.\n",
+	     fnameBuffer, qCount, 1000.0 * (what_time_is_it() - generationStarted) / (double)qCount);
       if (qCount % (printerval * 10) == 0) printerval *= 10;
     }
     queryLength = utf8_split_line_into_null_terminated_words((byte *)fgetsBuf, lineLen,
@@ -234,15 +249,21 @@ int main(int argc, char **argv) {
       // Look up wordStarts[q] in base vocab and extract its rank r
       // print the word at rank r in the emu vocab.
       if (params.verbose) printf("   --- looking at word %s\n", wordStarts[q]);
-      rank = getRankInBase(&globals, wordStarts[q]);
-      if (params.verbose) printf("   --- it's at rank %d\n", rank);
-      if (rank >= globals.emuVocabLineCount) {
-	printf("Error:  rank %d too high (> %d)\n", rank, globals.emuVocabLineCount);
-	exit(1);
+      rank = getRankInBase(&globals, &params, wordStarts[q]);
+      if (rank < 0) {
+	sprintf(noexist + 7, "%d", noexistNum++);
+	p = noexist;
+      } else {
+	if (params.verbose) printf("   --- it's at rank %d\n", rank);
+	if (rank >= globals.emuVocabLineCount) {
+	  // Rank is too high for the emu corpus - Choose a random ran instead.
+	  rank = (int)floor(rand_val(0));
+	  if (params.verbose) printf("Warning:  rank %d too high (> %d)\n", rank, globals.emuVocabLineCount);
+	}
+	outWord = globals.emuVocabLines[rank];
+	p = outWord;
       }
-      outWord = globals.emuVocabLines[rank];
       if (q >0) fputc(' ', globals.queryOutfile);
-      p = outWord;
       while (*p > ' ') {
 	fputc(*p, globals.queryOutfile);
 	p++;

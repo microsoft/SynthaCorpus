@@ -284,44 +284,9 @@ if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
     die "Error: Unable to extract stuff from base corpus $lsqcmd output\n";
 }
 
-# Use lsqcmd to compute alpha for bigrams
-$cmd = "$lsqcmd $baseDir/${corpusName}_bigrams\n";
-$lsqout = `$cmd`;
-die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
-
-print $lsqout;
-
-
-if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
-    $plot_elt_real_bg = $1;
-    $plot_elt_real_bg =~ /([\-0-9.]+)\s*\*x\s*title "Linear fit"/;
-    $base{alpha_bigrams} = $1;
-    $plot_elt_real_bg =~ s/Linear fit/Fitted real/;
-} else {
-    die "Error: Unable to extract stuff from base corpus bigrams $lsqcmd output\n";
-}
-
-# Use lsqcmd to compute alpha for repetitions
-$cmd = "$lsqcmd $baseDir/${corpusName}_repetitions\n";
-$lsqout = `$cmd`;
-die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
-
-print $lsqout;
-
-
-if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
-    $plot_elt_real_re = $1;
-    $plot_elt_real_re =~ /([\-0-9.]+)\s*\*x\s*title "Linear fit"/;
-    $base{alpha_repetitions} = $1;
-    $plot_elt_real_re =~ s/Linear fit/Fitted real/;
-} else {
-    die "Error: Unable to extract stuff from base corpus repetitions $lsqcmd output\n";
-}
-
-
-if (-e "$baseDir/${corpusName}_coocs.plot") {
-# Use lsqcmd to compute alpha for cooccurs (Only if the cooccurs files are available)
-    $cmd = "$lsqcmd $baseDir/${corpusName}_cooccurs\n";
+if ($dependencies eq "both" || $dependencies eq "base") {
+    # Use lsqcmd to compute alpha for bigrams
+    $cmd = "$lsqcmd $baseDir/${corpusName}_bigrams\n";
     $lsqout = `$cmd`;
     die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
 
@@ -329,15 +294,54 @@ if (-e "$baseDir/${corpusName}_coocs.plot") {
 
 
     if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
-	$plot_elt_real_co = $1;
-	$plot_elt_real_co =~ /([\-0-9.]+)\s*\*x\s*title "Linear fit"/;
-	$base{alpha_cooccurrences} = $1;
-	$plot_elt_real_co =~ s/Linear fit/Fitted real/;
+	$plot_elt_real_bg = $1;
+	$plot_elt_real_bg =~ /([\-0-9.]+)\s*\*x\s*title "Linear fit"/;
+	$base{alpha_bigrams} = $1;
+	$plot_elt_real_bg =~ s/Linear fit/Fitted real/;
     } else {
-	die "Error: Unable to extract stuff from base corpus cooccurs $lsqcmd output\n";
+	die "Error: Unable to extract stuff from base corpus bigrams $lsqcmd output\n";
     }
-}
 
+
+    # Use lsqcmd to compute alpha for repetitions
+    $cmd = "$lsqcmd $baseDir/${corpusName}_repetitions\n";
+    $lsqout = `$cmd`;
+    die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
+
+    print $lsqout;
+
+
+    if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
+	$plot_elt_real_re = $1;
+	$plot_elt_real_re =~ /([\-0-9.]+)\s*\*x\s*title "Linear fit"/;
+	$base{alpha_repetitions} = $1;
+	$plot_elt_real_re =~ s/Linear fit/Fitted real/;
+    } else {
+	die "Error: Unable to extract stuff from base corpus repetitions $lsqcmd output\n";
+    }
+
+
+    if (-e "$baseDir/${corpusName}_coocs.plot") {
+	# Use lsqcmd to compute alpha for cooccurs (Only if the cooccurs files are available)
+	$cmd = "$lsqcmd $baseDir/${corpusName}_cooccurs\n";
+	$lsqout = `$cmd`;
+	die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
+
+	print $lsqout;
+
+
+	if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
+	    $plot_elt_real_co = $1;
+	    $plot_elt_real_co =~ /([\-0-9.]+)\s*\*x\s*title "Linear fit"/;
+	    $base{alpha_cooccurrences} = $1;
+	    $plot_elt_real_co =~ s/Linear fit/Fitted real/;
+	} else {
+	    die "Error: Unable to extract stuff from base corpus cooccurs $lsqcmd output\n";
+	}
+    }
+} else {
+    print "Skipping word dependency analyses for the base corpus.\n";
+}
 
 print "
 
@@ -493,7 +497,7 @@ print "DL Piecewise Segs: $mimic_dl_segs_option\n";
 #  --------------------------------------------------------------------------------------
 
 
-# Use lsqcmd to compute alpha for $syntyp
+# Use lsqcmd to compute unigram alpha for $syntyp
 $lsq_stem = "$emulationDir/${corpusName}_vocab";
 $cmd = "$lsqcmd $lsq_stem\n";
 $lsqout = `$cmd`;
@@ -510,45 +514,9 @@ if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
     die "Error: Unable to extract stuff from $lsqcmd $lsq_stem output\n";
 }
 
-# Use lsqcmd to compute alpha for $syntyp _bigrams
-$lsq_stem = "$emulationDir/${corpusName}_bigrams";
-$cmd = "$lsqcmd $lsq_stem\n";
-$lsqout = `$cmd`;
-die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
-
-print $lsqout;
-
-if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
-    $plot_elt_mimic_bg{$syntyp} = $1;
-    $plot_elt_mimic_bg{$syntyp} =~ /(-[0-9.]+)\s*\*x\s*title "Linear fit"/;
-    $mimic{alpha_bigrams} = $1;
-    $plot_elt_mimic_bg{$syntyp} =~ s/Linear fit/Fitted $syntyp mimic/;
-} else {
-    warn "Warning: Unable to extract stuff from $lsqcmd $lsq_stem output\n";
-}
-
-# Use lsqcmd to compute alpha for $syntyp _repetitions
-$lsq_stem = "$emulationDir/${corpusName}_repetitions";
-$cmd = "$lsqcmd $lsq_stem\n";
-$lsqout = `$cmd`;
-die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
-
-print $lsqout;
-
-if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
-    $plot_elt_mimic_re{$syntyp} = $1;
-    $plot_elt_mimic_re{$syntyp} =~ /(-[0-9.]+)\s*\*x\s*title "Linear fit"/;
-    $mimic{alpha_repetitions} = $1;
-    $plot_elt_mimic_re{$syntyp} =~ s/Linear fit/Fitted $syntyp mimic/;
-} else {
-    warn "Warning: Unable to extract stuff from $lsqcmd $lsq_stem output\n";
-}
-
-
-$lsq_stem = "$emulationDir/${corpusName}_coocs";
-if (-e "$lsq_stem.plot") {
-    # Use lsqcmd to compute alpha for $syntyp _cooccurs (Only if files exist)
-    
+if ($dependencies eq "both" || $dependencies eq "mimic") {
+    # Use lsqcmd to compute alpha for $syntyp _bigrams
+    $lsq_stem = "$emulationDir/${corpusName}_bigrams";
     $cmd = "$lsqcmd $lsq_stem\n";
     $lsqout = `$cmd`;
     die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
@@ -556,14 +524,54 @@ if (-e "$lsq_stem.plot") {
     print $lsqout;
 
     if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
-	$plot_elt_mimic_co{$syntyp} = $1;
-	$plot_elt_mimic_co{$syntyp} =~ /(-[0-9.]+)\s*\*x\s*title "Linear fit"/;
-	$mimic{alpha_cooccurs} = $1;
-	$plot_elt_mimic_co{$syntyp} =~ s/Linear fit/Fitted $syntyp mimic/;
+	$plot_elt_mimic_bg{$syntyp} = $1;
+	$plot_elt_mimic_bg{$syntyp} =~ /(-[0-9.]+)\s*\*x\s*title "Linear fit"/;
+	$mimic{alpha_bigrams} = $1;
+	$plot_elt_mimic_bg{$syntyp} =~ s/Linear fit/Fitted $syntyp mimic/;
     } else {
 	warn "Warning: Unable to extract stuff from $lsqcmd $lsq_stem output\n";
-	$cooccurs = 0;
     }
+
+    # Use lsqcmd to compute alpha for $syntyp _repetitions
+    $lsq_stem = "$emulationDir/${corpusName}_repetitions";
+    $cmd = "$lsqcmd $lsq_stem\n";
+    $lsqout = `$cmd`;
+    die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
+
+    print $lsqout;
+
+    if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
+	$plot_elt_mimic_re{$syntyp} = $1;
+	$plot_elt_mimic_re{$syntyp} =~ /(-[0-9.]+)\s*\*x\s*title "Linear fit"/;
+	$mimic{alpha_repetitions} = $1;
+	$plot_elt_mimic_re{$syntyp} =~ s/Linear fit/Fitted $syntyp mimic/;
+    } else {
+	warn "Warning: Unable to extract stuff from $lsqcmd $lsq_stem output\n";
+    }
+
+
+    $lsq_stem = "$emulationDir/${corpusName}_coocs";
+    if (-e "$lsq_stem.plot") {
+	# Use lsqcmd to compute alpha for $syntyp _cooccurs (Only if files exist)
+	
+	$cmd = "$lsqcmd $lsq_stem\n";
+	$lsqout = `$cmd`;
+	die "$lsqcmd failed with code $?.\nCommand was $cmd.\n" if $?;
+
+	print $lsqout;
+
+	if ($lsqout =~ /,(.*?\s[\-0-9.]+\s*\*x\s*title "Linear fit")/s){
+	    $plot_elt_mimic_co{$syntyp} = $1;
+	    $plot_elt_mimic_co{$syntyp} =~ /(-[0-9.]+)\s*\*x\s*title "Linear fit"/;
+	    $mimic{alpha_cooccurs} = $1;
+	    $plot_elt_mimic_co{$syntyp} =~ s/Linear fit/Fitted $syntyp mimic/;
+	} else {
+	    warn "Warning: Unable to extract stuff from $lsqcmd $lsq_stem output\n";
+	    $cooccurs = 0;
+	}
+    }
+} else {
+    print "Skipping word dependency analyses for mimic corpus\n";
 }
 
 die "Can't write to $emulationDir/${corpusName}_base_v_mimic_summary.txt\n"

@@ -10,7 +10,7 @@ all: corpusPropertyExtractor.exe dahashDemo.exe queryGenerator.exe queryLogEmula
 queryGenerator.exe:	queryGenerator.o qGeneratorArgTable.o characterSetHandling/unicode.o imported/Fowler-Noll-Vo-hash/fnv.o imported/TinyMT_cutdown/tinymt64.o utils/argParser.o utils/dahash.o utils/dynamicArrays.o utils/general.o utils/randomNumbers.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
-queryLogEmulator.exe:	queryLogEmulator.o qleArgTable.o characterSetHandling/unicode.o utils/argParser.o utils/general.o
+queryLogEmulator.exe:	queryLogEmulator.o qleArgTable.o characterSetHandling/unicode.o utils/argParser.o utils/general.o imported/TinyMT_cutdown/tinymt64.o utils/randomNumbers.o
 	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
 
 selectRecordsFromFile.exe:	selectRecordsFromFile.o utils/general.o imported/TinyMT_cutdown/tinymt64.o

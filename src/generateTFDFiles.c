@@ -40,12 +40,11 @@ static int hashCmp(const void *vip, const void *vjp) {
   // tail of the table array.
   wordCounter_t *i = (wordCounter_t *)((char *)vip + keySize);
   wordCounter_t *j = (wordCounter_t *)((char *)vjp + keySize);
+  int r;
   if (*i > *j) return -1;  // Descending frequency
   if (*j > *i) return 1;
-  // Use pointer values to break ties - otherwise qsort runs like a dog
-  if (i > j) return 1;
-  if (j < i) return -1;
-  return 0;  // Shouldn't ever happen
+  r = strcmp((char *)vip, (char *)vjp);  // Tie breaker
+  return r;
 }
 
 static double getFreq(char *sortedHashTable, int distinctWords, size_t entryLen, size_t keyLen, int t) {
