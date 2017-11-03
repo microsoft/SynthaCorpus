@@ -5,7 +5,7 @@
 
 typedef struct {
   char *baseStem, *emuStem;
-  BOOL verbose;
+  BOOL verbose, obfuscate;
 } params_t;
 
 extern params_t params;

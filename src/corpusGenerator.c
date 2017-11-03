@@ -24,7 +24,7 @@
 // selections are made among the non-full documents only.  All the
 // full ones sit at the top of the table.  Note that compound terms
 // are assigned first to reduce the chance of failed allocations terms
-// into docuements with few unallocated postions. Once all terms have
+// into documents with few unallocated postions. Once all terms have
 // been assigned to documents, each document is independently
 // shuffled, taking care not to break up or reorder Ngrams.
 

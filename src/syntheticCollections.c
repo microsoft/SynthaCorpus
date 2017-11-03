@@ -102,7 +102,7 @@ int generate_fakedoc_len_histo(docnum_t *num_docs) {
   long long total_length = 0, postings_required = (long long)ceil(synth_postings),
     *freqp, docs_generated = 0;
   int max_len = 0, length;
-  double start;
+  double start, rl;
   start = what_time_is_it();
 
   fakedoc_len_histo = dyna_create(1000, sizeof(long long));   // Start with 1000 lengths
@@ -113,12 +113,13 @@ int generate_fakedoc_len_histo(docnum_t *num_docs) {
     return max_len;
   }
 
-
   do {
     // Note: rand_normal() may lead to a negative or zero length; rand_gamma() may be zero.  Just ignore those
     if (num_dl_segs > 0) {
       // Use piecewise linear model of document lengths
-      length = (int)(ceil(rand_cumdist(num_dl_segs, dl_cumprobs, dl_lengths)));
+      rl = rand_cumdist(num_dl_segs, dl_cumprobs, dl_lengths);
+      length = (int)(ceil(rl));
+      if (rl <=  2) printf("GFLH:  Chose length %d, given rl = %.6f\n", length, rl);
     }
     else if (synth_dl_gamma_shape != UNDEFINED_DOUBLE) {
       length = (int)(round(rand_gamma(synth_dl_gamma_shape, synth_dl_gamma_scale)));
@@ -130,7 +131,7 @@ int generate_fakedoc_len_histo(docnum_t *num_docs) {
     if (length < 1) continue;
     if (length > MAX_DOC_WORDS) length = MAX_DOC_WORDS;  
     if (length > max_len) max_len = length;
-    freqp = (long long *)dyna_get(&fakedoc_len_histo, length, DYNA_DOUBLE);
+    freqp = (long long *)dyna_get(&fakedoc_len_histo, length - 1, DYNA_DOUBLE);
     (*freqp)++;
     total_length += length;
     docs_generated++;

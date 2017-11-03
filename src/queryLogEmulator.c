@@ -109,6 +109,11 @@ static int vocabCmp(const void *ip, const  void *jp) {
 
 
 int getRankInBase(globals_t *globals, params_t *params, char *inWord) {
+  // Lookup inWord in the base vocab.tsv.  If the latter was written
+  // by a post Sep 2017 version of corpusPropertyExtractor, then
+  // the entries will have rank-in-frequency_ordering as a fourth
+  // column.  Note that those ranks number from 1 for the most
+  // frequent word.
   u_char **vocabEntryP, *p, *q;
   int rank, field;
 
@@ -127,7 +132,7 @@ int getRankInBase(globals_t *globals, params_t *params, char *inWord) {
   p++;  // Skip the tab
 
   // There should be three numeric fields: occFreq, DF, and rank.  We only want the
-  // third one.
+  // third one.  //
   for (field = 2; field < 5; field++) {
     errno = 0;
     rank = strtod(p, (char **)&q);
@@ -249,7 +254,12 @@ int main(int argc, char **argv) {
       // Look up wordStarts[q] in base vocab and extract its rank r
       // print the word at rank r in the emu vocab.
       if (params.verbose) printf("   --- looking at word %s\n", wordStarts[q]);
-      rank = getRankInBase(&globals, &params, wordStarts[q]);
+      rank = getRankInBase(&globals, &params, wordStarts[q]) -1; // get array index from 1-origin rank
+      if (params.obfuscate) {
+	double r = rand_val(0);
+	if (r > 0.6666667) rank++;
+	else if (rank > 0 && r < 0.3333333) rank--;
+      }
       if (rank < 0) {
 	sprintf(noexist + 7, "%d", noexistNum++);
 	p = noexist;

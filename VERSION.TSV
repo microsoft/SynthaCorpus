@@ -1,5 +1,6 @@
 #VERSION	RELEASE_DATE	COMMENTS
-1.03		02 Oct 2017	Enhancing queryLogEmulator, speeding up sort in corpusPropertyExtractor, and fixing bug in emulateARealCorpus.pl when -dependencies != both.
+1.04		03 Nov 2017	Bug fixes affecting queryLogEmulator: now emulation is reversible, but may be deliberately obfuscated.  Fixed infinite loop in Markov word generation without EOW symbol.  Fixed some problems with dlsegs option.
+1.03		02 Nov 2017	Enhancing queryLogEmulator, speeding up sort in corpusPropertyExtractor, and fixing bug in emulateARealCorpus.pl when -dependencies != both.
 1.02		31 Oct 2017	Adding queryLogEmulator program.
 1.01		17 Aug 2017	Adding options to suppress (memory intensive) extraction of dependency properties
 1.0		05 June 2017	Initial release

@@ -635,14 +635,14 @@ void setup_transition_matrices(int K, u_char *training_tsv, double **lp) {
  
 }
 
-
+static long long max_tries[MAX_TERM_LEN + 1] = {0};
  
 void store_unique_markov_word(u_char *where, u_int term_rank) {
   // Using the pre-built Markov model of order k, generate a random word of 
   // length l.  Buffer must be at least of size l + 1;
   // Currently assuming single byte characters but that's ratty
   int i, j, alphabet_index, l, k = Markov_order, *count, rankbuk;
-  long long row_index, max_tries = 1, tries = 0;
+  long long row_index, tries = 0;
   u_char context[MAX_MARKOV_K] = { 0 }, *bp = where;
   double *row, randy, *background = NULL, *transition_matrix = NULL;
 
@@ -663,8 +663,17 @@ void store_unique_markov_word(u_char *where, u_int term_rank) {
     if (0) printf("Term %d, l = %d\n", term_rank, l);
   }
 
-  for (i = 0; i < l; i++) max_tries *= A_alphabet_size;
- 
+  // If this is the first time we've been called, initialise the
+  // max_tries array.
+  if (max_tries[0] == 0) {
+    long long t;
+    t = 1;
+    for (i = 0; i <= MAX_TERM_LEN; i++) {
+      max_tries[i] = t;
+      if (t <= 10000000000) t *= A_alphabet_size;  // Condition to prevent overflow
+    }
+  }
+  
   if (0) printf("store_unique_markov_word(..., %d, %d)\n", l, k);
 
   do {  // Need to repeatedly try until we generate a previously unseen word.
@@ -774,10 +783,16 @@ void store_unique_markov_word(u_char *where, u_int term_rank) {
       }
     }
 
-    if (0) printf("Trying again (%lld).  %s already used ...\n", tries, where);
-    if (tries > max_tries) {
-      printf("Note:  After %lld unsuccessful attempts at length %d for term %u will increase length by 1\n",
-	     tries, l, term_rank);
+    if (0) printf("Trying again (%lld/%lld).  %s already used ...\n", tries, max_tries[l], where);
+    if (tries > max_tries[l]) {
+      if (max_tries[l] > 1) {
+	printf("Note:  After %lld/%lld unsuccessful attempts at length %d for term %u will increase length by 1\n",
+	       tries, max_tries[l], l, term_rank);
+	printf(" ... setting max_tries[%d] to zero\n", l);
+      }
+      
+      max_tries[l] = 0;  // Future attempts at this length are guaranteed to fail too.
+ 
       l++;
       if (l > MAX_TERM_LEN) {
 	printf("Error: term length has increased above %d due to retries.\n", MAX_TERM_LEN);
@@ -785,7 +800,6 @@ void store_unique_markov_word(u_char *where, u_int term_rank) {
       }
      }
     // Have to reset bp and clear context before retrying
-    tries = 0;
     bp = where;
     memset(context, 0, MAX_MARKOV_K);
   } while (1); // End of retry-to-get-unique loop.

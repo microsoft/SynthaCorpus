@@ -108,15 +108,45 @@ static void print_usage(char *progName, arg_t *args) {
 }
 
 
-static wordCounter_t *freqs = NULL;  // Used by the next two functions
 
-
-static int cmp_freq(const void *ip, const void *jp) {
-  int *i = (int *)ip, *j = (int *)jp;
-  if (freqs[*i] < freqs[*j]) return 1;
-  if (freqs[*i] > freqs[*j]) return -1;
-  return 0;  // May need a tie breaker, but what to use
+static int cmpPermuteAA(const void *ip, const void *jp) {
+  // Used to qsort an array of pointers to strings into ascending
+  // alphabetic order of the strings to which they point.
+  char *cip = *((char **)ip), *cjp = *((char **)jp);
+  int r = strcmp(cip, cjp);
+  return r;
 }
+
+
+static int cmpPermuteDFV(const void *ip, const void *jp) {
+  // Used to qsort an array of pointers to strings into descending
+  // frequency order of the vocab hashtable entries to which they point.
+  char *cip = *((char **)ip), *cjp = *((char **)jp);
+  wordCounter_t *wip = (wordCounter_t *)(cip + MAX_WORD_LEN + 1),
+    *wjp  = (wordCounter_t *)(cjp + MAX_WORD_LEN + 1);
+  int r;
+  if (*wip > *wjp) return -1;
+  if (*wip < *wjp) return 1;
+  r = strcmp(cip, cjp);  // Tie breaking
+  return r;
+}
+
+
+static int cmpPermuteDFVI(const void *ip, const void *jp) {
+  // As for DFV with an extra level of indirection
+  char **ccip = *((char ***)ip), **ccjp = *((char ***)jp);
+  char *cip = *((char **)ccip), *cjp = *((char **)ccjp);
+  wordCounter_t *wip = (wordCounter_t *)(cip + MAX_WORD_LEN + 1),
+    *wjp  = (wordCounter_t *)(cjp + MAX_WORD_LEN + 1);
+  int r;
+  if (0) printf("CMP: Comparing %lld with %lld\n", *wip, *wjp);
+  if (*wip > *wjp) return -1;
+  if (*wip < *wjp) return 1;
+  if (0) printf("DFVI: Comparing '%s' with '%s'\n", cip, cjp);
+  r = strcmp(cip, cjp);  // Tie breaking
+  return r;
+}
+
 
 
 static int *CreateAlphaToRankMapping(char **alphabeticPermutation,
@@ -125,30 +155,44 @@ static int *CreateAlphaToRankMapping(char **alphabeticPermutation,
   // index in the alphabetic ordering of terms.  This function gives
   // us a mapping which allows us to turn that index into a termid,
   // i.e. the term's rank within the descending frequency ordering.
-  int *permute = NULL, *alphaToRankMapping = NULL, t;
+  char ***permute = NULL;
+  int t, *alphaToRankMapping = NULL;
   double start;
 
+  if (0) printf("Creating AlphaToRank mapping\n");
   start = what_time_is_it();
-  permute = cmalloc(vocabSize * sizeof(int), "CreateAlphaToRankMapping1", FALSE);
-  freqs = cmalloc(vocabSize * sizeof(wordCounter_t), "CreateAlphaToRankMapping2", FALSE);
-  alphaToRankMapping = cmalloc(vocabSize * sizeof(int), "CreateAlphaToRankMapping3", FALSE);
+  permute = cmalloc(vocabSize * sizeof(char **), "CreateAlphaToRankMapping1", FALSE);
+  alphaToRankMapping = cmalloc(vocabSize * sizeof(int), "CreateAlphaToRankMapping2", FALSE);
   for (t = 0; t < vocabSize; t++) {
-    permute[t] = t;
-    freqs[t] = *((wordCounter_t *)(alphabeticPermutation[t] + MAX_WORD_LEN + 1));
+    permute[t] = alphabeticPermutation + t;
   }
 
-  qsort(permute, vocabSize, sizeof(int), cmp_freq);   
+  if (0) printf("Qsorting permutation in AlphaToRank mapping\n");
+  qsort(permute, vocabSize, sizeof(char **), cmpPermuteDFVI);
+
+  if (0) {
+    for (t = 0; t < 13; t++) {
+      char *rec = *(permute[t]);
+      wordCounter_t *freqp = (wordCounter_t *)(rec + MAX_WORD_LEN + 1);
+      printf("%3d  %8lld  %s\n", t + 1, *freqp, rec);
+    }
+  }
 
   // permute is now a mapping from rank in the freq sorted list to alphabetic rank
   // Create alphaToRankMapping by reversing this
+  if (0) printf("Reversing permutation in AlphaToRank mapping\n");
   for (t = 0; t < vocabSize; t++) {
-    alphaToRankMapping[permute[t]] = t + 1;  // +1 so that the termids start at rank 1, not 0
+    int rankInAlpha;
+    rankInAlpha = (int)(permute[t] - alphabeticPermutation);
+    if (rankInAlpha < 0 || rankInAlpha >= vocabSize) {
+      printf("Error: rankInAlpha out of range at %d cf. %d. t=%d\n",
+	     rankInAlpha, vocabSize, t);
+    }
+    alphaToRankMapping[rankInAlpha] = t + 1;  // +1 so that the termids start at rank 1, not 0
   }
 
   free(permute);
-  free(freqs);
   permute = NULL;
-  freqs = NULL;
   printf("Created alphaToRankMapping for vocab: %d entries.  Elapsed time %.3f sec.\n",
 	 vocabSize, what_time_is_it() - start);
   return alphaToRankMapping;
@@ -398,29 +442,6 @@ static void processSTARCFormat(params_t *params, globals_t *globals) {
   
 }
 
-static int cmpPermuteAA(const void *ip, const void *jp) {
-  // Used to qsort an array of pointers to strings into ascending
-  // alphabetic order of the strings to which they point.
-  char *cip = *((char **)ip), *cjp = *((char **)jp);
-  int r = strcmp(cip, cjp);
-  return r;
-}
-
-
-static int cmpPermuteDFV(const void *ip, const void *jp) {
-  // Used to qsort an array of pointers to strings into descending
-  // frequency order of the vocab hashtable entries to which they point.
-  char *cip = *((char **)ip), *cjp = *((char **)jp);
-  wordCounter_t *wip = (wordCounter_t *)(cip + MAX_WORD_LEN + 1),
-    *wjp  = (wordCounter_t *)(cjp + MAX_WORD_LEN + 1);
-  int r;
-  if (*wip > *wjp) return -1;
-  if (*wip < *wjp) return 1;
-  r = strcmp(cip, cjp);  // Tie breaking
-  return r;
-}
-
-
 static void writeVocabTSV(globals_t *globals, char ***alphabeticPermutation,
 			  int **alphaToRankMapping) {
   // vocab.tsv will be written in alphabetic order and an alphabetic
@@ -658,7 +679,7 @@ int main(int argc, char **argv) {
     dahash_destroy(&(globals.gNgramHash));
 
     // Deal with the Repetitions
-    if (1) printf("About to start on repetitions\n");
+    printf("About to start on repetitions\n");
     filterCompoundsHash(&params, &globals, alphabeticPermutation, TERM_REPS);
 	       
     writeTSVAndTermidsFiles(&params, &globals, alphabeticPermutation,

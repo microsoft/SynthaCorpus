@@ -52,11 +52,12 @@ if (defined($thorough)) {
     run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=mimic");
     run("$perl ./emulateARealCorpus.pl PG Linear base26 dlhisto ind -dependencies=both");
     run("$perl ./emulateARealCorpus.pl PG Copy from_tsv dlhisto ngrams2");
+    run("$perl ./emulateARealCorpus.pl PG Piecewise tnum dlsegs ind");
     run("$perl ./emulateARealCorpus.pl PG Piecewise base26 dlhisto ind");
     run("$perl ./emulateARealCorpus.pl PG Piecewise base26 dlnormal ind");
-    #run("$perl ./emulateARealCorpus.pl PG Piecewise markov-0 dlhisto ind");
+    run("$perl ./emulateARealCorpus.pl PG Piecewise markov-0 dlhisto ind");
     run("$perl ./emulateARealCorpus.pl PG Piecewise markov-0e dlhisto ind");
-    #run("$perl ./emulateARealCorpus.pl PG Piecewise markov-5 dlhisto ind");
+    run("$perl ./emulateARealCorpus.pl PG Piecewise markov-5 dlhisto ind");
     run("$perl ./emulateARealCorpus.pl PG Piecewise markov-5e dlhisto ngrams3");
 } else {
     print "Skipping the thorough tests ...\n";

@@ -229,7 +229,7 @@ double rand_cumdist(int num_segs, double *cumprobs, double *xvals) {
     if (unirand <= cumprobs[s]) {
       if (s == 0) {
 	loprob = 0.0;
-	loxval = 1;
+	loxval = 0;
       }
       else {
 	loprob = cumprobs[s - 1];
