@@ -34,8 +34,9 @@
 // Handling of out-of-vocabulary words was improved on around 01 Nov 2017 as
 // follows:
 //
-// A. query word is not within the vocab of the baseStem corpus ---> emit a made-up
-//    word which doesn't occur in the emuStem corpus either.  E.g. 'noexist27'
+// A. query word is not within the vocab of the baseStem corpus ---> Either:
+//   1. emit a word which doesn't occur in the emuStem corpus.  E.g. 'noexist27', or
+//   2. Emit a randomly chosen word from the emuStem vocab.
 // B. Rank of query word in baseStem corpus is higher than the highest possible
 //    rank within emuStem --> Emit a randomly chosen word from the emuStem vocab.
 //
@@ -165,14 +166,15 @@ static void printUsage(char *progName, char *msg, arg_t *args) {
 
 
 int main(int argc, char **argv) {
-  int a, q, queryLength, rank, qCount = 0, printerval = 10, noexistNum = 0;
+  int a, q, queryLength, rank0, qCountI = 0, qCountO = 0, printerval = 10, noexistNum = 0;
   double aveQueryLength = 0.0, startTime, generationStarted, generationTime, overheadTime;
   char *outWord, *fnameBuffer, ASCIITokenBreakSet[] = DFLT_ASCII_TOKEN_BREAK_SET,
     *p, *ignore;
   size_t lineLen, stemLen;
   globals_t globals;
-  char fgetsBuf[1000], noexist[100] = "noexist";
+  u_char fgetsBuf[10000], noexist[100] = "noexist";
   byte *wordStarts[500];
+  u_ll randSeed;
 
   startTime = what_time_is_it();
   setvbuf(stdout, NULL, _IONBF, 0);
@@ -180,7 +182,8 @@ int main(int argc, char **argv) {
   initialise_ascii_tables(ASCIITokenBreakSet, TRUE);
   if (0) display_ascii_non_tokens();
 
-  rand_val(13);
+  randSeed = (u_ll)fmod(startTime, 100000.0);
+  rand_val(randSeed);
   initialiseParams();
   printf("Params initialised\n");
   initialiseGlobals(&globals);   // Includes the hashtables as well as scalar values
@@ -233,44 +236,54 @@ int main(int argc, char **argv) {
   overheadTime = what_time_is_it() - startTime;
   printf("Setup complete:  Elapsed time: %.3f sec.\n", overheadTime);
 
-  qCount = 0;
-  while (fgets(fgetsBuf, 1000, globals.queryInfile) != NULL) {  // Loop over input queries
+  while (fgets(fgetsBuf, 10000, globals.queryInfile) != NULL) {  // Loop over input queries
     lineLen = strlen(fgetsBuf);
     while (fgetsBuf[lineLen -1] < ' ') lineLen--;  // Strip trailing newlines, CRs etc
     fgetsBuf[lineLen] = 0;
     if (params.verbose) printf("Input query: %s\n", fgetsBuf);
-    qCount++;
-    if (qCount % printerval == 0) {
+    qCountI++;
+    if (qCountO % printerval == 0) {
       printf("   --- Progress %s: %d queries generated ---  Average time per query: %.3f msec.\n",
-	     fnameBuffer, qCount, 1000.0 * (what_time_is_it() - generationStarted) / (double)qCount);
-      if (qCount % (printerval * 10) == 0) printerval *= 10;
+	     fnameBuffer, qCountO, 1000.0 * (what_time_is_it() - generationStarted) / (double)qCountO);
+      if (qCountO % (printerval * 10) == 0) printerval *= 10;
     }
     queryLength = utf8_split_line_into_null_terminated_words((byte *)fgetsBuf, lineLen,
 							     (byte **)&wordStarts,
 							     500, MAX_WORD_LEN,
 							     TRUE,  FALSE, FALSE, FALSE);
+
+    if (params.verbose) printf("Input query length: %d\n", queryLength);
     
     for (q = 0; q < queryLength; q++) {  // Loop over words in query
       // Look up wordStarts[q] in base vocab and extract its rank r
       // print the word at rank r in the emu vocab.
       if (params.verbose) printf("   --- looking at word %s\n", wordStarts[q]);
-      rank = getRankInBase(&globals, &params, wordStarts[q]) -1; // get array index from 1-origin rank
-      if (params.obfuscate) {
+      rank0 = getRankInBase(&globals, &params, wordStarts[q]) -1; // get array index from 1-origin rank
+      if (params.obfuscate  && rank0 >= 0) {
 	double r = rand_val(0);
-	if (r > 0.6666667) rank++;
-	else if (rank > 0 && r < 0.3333333) rank--;
+	if (r > 0.6666667) rank0++;
+	else if (rank0 > 0 && r < 0.3333333) rank0--;
       }
-      if (rank < 0) {
-	sprintf(noexist + 7, "%d", noexistNum++);
-	p = noexist;
-      } else {
-	if (params.verbose) printf("   --- it's at rank %d\n", rank);
-	if (rank >= globals.emuVocabLineCount) {
-	  // Rank is too high for the emu corpus - Choose a random ran instead.
-	  rank = (int)floor(rand_val(0));
-	  if (params.verbose) printf("Warning:  rank %d too high (> %d)\n", rank, globals.emuVocabLineCount);
+      if (rank0 < 0) {
+	  if (params.verbose) printf("Warning:  '%s' not found in baseStem vocab.\n",
+				     wordStarts[q]);
+	if (params.preserveNoExists) {
+	  sprintf(noexist + 7, "%d", noexistNum++);
+	  p = noexist;
+	} else {
+	  rank0 = (int)floor(rand_val(0) * (double)globals.emuVocabLineCount);
+	  outWord = globals.emuVocabLines[rank0];
+	  p = outWord;
 	}
-	outWord = globals.emuVocabLines[rank];
+      } else {
+	if (params.verbose) printf("   --- it's at rank0 %d\n", rank0);
+	if (rank0 >= globals.emuVocabLineCount) {
+	  // Rank0 is too high for the emu corpus - Choose a random rank0 instead.
+	  if (params.verbose) printf("Warning:  rank0 %d too high (> %d).  Choosing a random substitute.\n",
+				     rank0, globals.emuVocabLineCount);
+	  rank0 = (int)floor(rand_val(0) * (double)globals.emuVocabLineCount);
+	}
+	outWord = globals.emuVocabLines[rank0];
 	p = outWord;
       }
       if (q >0) fputc(' ', globals.queryOutfile);
@@ -281,6 +294,7 @@ int main(int argc, char **argv) {
       aveQueryLength++;
     }
     fputc('\n', globals.queryOutfile);
+    qCountO++;
   }
     
   generationTime = what_time_is_it() - generationStarted;
@@ -291,13 +305,13 @@ int main(int argc, char **argv) {
 		globals.bvSize);
   unmmap_all_of(globals.emuVocabInMemory, globals.evFH, globals.evMH,
 		globals.evSize);
-  if (qCount > 0) aveQueryLength /= (double)qCount;
-  printf("Number of queries: %d\nAve. query length: %.2f\nQuery file %s.qlog\n",
-	 qCount, aveQueryLength, params.emuStem);
+  if (qCountO > 0) aveQueryLength /= (double)qCountO;
+  printf("Number of input queries: %d\nAve. query length: %.2f\nQuery file %s.qlog\n",
+	 qCountI, aveQueryLength, params.emuStem);
   overheadTime = (what_time_is_it() - startTime) - generationTime;
   printf("Total time taken: %.1f sec. startup/shutdown + %.1f sec. generation time\n"
-	 "Average generation time per query: %.4f sec\n",
-	 overheadTime, generationTime,  generationTime / (double)qCount);
-  printf("\nEmulated query log is in %s.qlog\n", params.emuStem);
+	 "Average generation time per query: %.4f msec\n",
+	 overheadTime, generationTime,  1000.0 * generationTime / (double)qCountO);
+  printf("\nEmulated query log (%d queries) is in %s.qlog\n", qCountO, params.emuStem);
 }
 

@@ -739,6 +739,8 @@ int utf8_split_line_into_null_terminated_words(byte *input, size_t inlen, byte *
   unicode_t unicode;
   BOOL finished = FALSE, contains_ASCII_alnum;
 
+  if (0) printf("utf8_split:  input = '%s', inlen = %zd\n", input, inlen);
+
   if (input == NULL || word_starts == NULL || max_words <= 0 || input[0] == 0) return 0;
 
   last = input + inlen - 1;
@@ -760,6 +762,9 @@ int utf8_split_line_into_null_terminated_words(byte *input, size_t inlen, byte *
     }
   }
 
+  if (0) printf("utf8_split: modified input = '%s, inlen = %zd\n", input, inlen);
+ 
+
   p = input;
   last = input + inlen - 1;
   while (p <= last) { // We'll break out if we reach any of a few stopping conditions
@@ -770,6 +775,7 @@ int utf8_split_line_into_null_terminated_words(byte *input, size_t inlen, byte *
       if (*p & 0x80) {	
 	unicode = utf8_getchar(p, &bafter, FALSE);  // Warning: This could theoretically scan beyond input.
 	char_width = (int)(bafter - p);
+	if (0) printf("unicode=%d, %d bytes\n", unicode, char_width);
 	// Assume (falsely) that all non-punctuation unicode is indexable
 	if (!(unicode_ispunct(unicode) || unicode == 0xA0)) break;  // 00A0 is no-break space
 	else p = bafter;
@@ -789,9 +795,11 @@ int utf8_split_line_into_null_terminated_words(byte *input, size_t inlen, byte *
     }
 
     wdstart = p;      // Record where this word started
-    if (0) printf("wdstart = %X\n", *wdstart);
     p += char_width;  // Skip the first char (already scanned.) 
 
+
+    if (0) printf("Scanning text of a word '%s'\n", wdstart);
+    
     // ------------------------------ Scan the text of a word --------------------------
     contains_ASCII_alnum = FALSE;
     while (p <= last) {  // Traverse the sequence of indexable characters.  On exit
@@ -824,7 +832,6 @@ int utf8_split_line_into_null_terminated_words(byte *input, size_t inlen, byte *
     // ------------ Null terminate, truncate if necessary, and record the start of this word --------
     if (p >= last) {
       finished = TRUE;
-      if (0) printf("  FINISHED\n");
     }
     *p = 0;  // Null terminate the word -- We've declared we're going to do this
     q = p; 
