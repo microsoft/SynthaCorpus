@@ -1,0 +1,19 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "LsqfitPlots/Wikipedia_lsqfit.pdf"
+set xlabel "Log(rank)"
+set ylabel "Log(probability)"
+set style line 1 linewidth 4
+set style line 2 linewidth 4
+set style line 3 linewidth 4
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 0.5
+
+plot "Wikipedia.plot" title "Observed" pt 7 ps 0.25, -2.3493 + -1.0329 *x  title "Linear fit" ls 2, -4.026 + -0.5724 *x + -0.0266 *x**2  title "Quadratic fit" ls 3, "PiecewisePlots/middle_Wikipedia.plotdat" title "Piecewise fit (h=10, s=10)" w l ls 5 
+

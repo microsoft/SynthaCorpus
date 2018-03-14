@@ -1,0 +1,18 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "PiecewisePlots/clueWeb12Titles_real_v_mimic.pdf"
+set xlabel "Log(rank)"
+set ylabel "Log(probability)"
+set style line 1 linewidth 2
+set style line 2 linewidth 4
+set style line 3 linewidth 2
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 3
+
+plot "clueWeb12Titles.plot" title "Real" pt 7 ps 0.25,  -0.4402 + -1.2895 *x  title "Fitted real" ls 1, "PiecewisePlots/clueWeb12Titles.plot" title "Mimic" pt 7 ps 0.25,  -0.4324 + -1.2907 *x  title "Fitted mimic" ls 3

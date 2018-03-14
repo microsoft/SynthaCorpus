@@ -1,0 +1,20 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "ScaledUpPlots/Top100M_real_v_scaled_up.pdf"
+
+set xlabel "Ln(rank)"
+set ylabel "Ln(probability)"
+set style line 1 linewidth 4
+set style line 2 linewidth 4
+set style line 3 linewidth 4
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 3
+
+plot "Top100M.plot" title "Real" pt 7 ps 0.25,  -0.9881 + -1.2183 *x  title "Fitted real" ls 1, "ScaledUpPlots/ScaledUp_Top100M.plot" title "Scaled_Up" pt 7 ps 0.25,  -0.9828 + -1.2285 *x  title "Fitted scaled_up" ls 3
+

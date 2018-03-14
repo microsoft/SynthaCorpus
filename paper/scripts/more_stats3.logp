@@ -1,0 +1,19 @@
+Random number generator seeded with 2237207836706
+CMAP:  0.0MB allocated.
+CMAP:  0.0MB allocated.
+Alphabet sizes: in 27,  out 26
+CMAP:  0.0MB allocated.
+Markov-0 created with 26 elements
+CMAP:  0.0MB allocated.
+Markov-1 created with 702 elements
+CMAP:  0.1MB allocated.
+Markov-2 created with 18954 elements
+CMAP:  3.9MB allocated.
+Markov-3 created with 511758 elements
+CMAP:  105.4MB allocated.
+Markov-4 created with 13817466 elements
+CMAP:  2846.3MB allocated.
+Markov-5 created with 373071582 elements
+
+Error 2 while statting vocab.tsv
+mmap_all_of() failed.

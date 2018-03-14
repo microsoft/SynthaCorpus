@@ -1,0 +1,19 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "LsqfitPlots/Tweets_lsqfit.pdf"
+set xlabel "Log(rank)"
+set ylabel "Log(probability)"
+set style line 1 linewidth 4
+set style line 2 linewidth 4
+set style line 3 linewidth 4
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 0.5
+
+plot "Tweets.plot" title "Observed" pt 7 ps 0.25, -1.682 + -1.1495 *x  title "Linear fit" ls 2, -1.6149 + -1.1641 *x + 0.0007 *x**2  title "Quadratic fit" ls 3, "PiecewisePlots/middle_Tweets.plotdat" title "Piecewise fit (h=10, s=10)" w l ls 5 
+

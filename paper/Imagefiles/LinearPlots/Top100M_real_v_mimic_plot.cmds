@@ -1,0 +1,19 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "LinearPlots/Top100M_real_v_mimic.pdf"
+set title "Term probability distribution for real and synthetic Top100M"
+set xlabel "Ln(rank)"
+set ylabel "Ln(probability)"
+set style line 1 linewidth 2
+set style line 2 linewidth 4
+set style line 3 linewidth 2
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 3
+
+plot "Top100M.plot" title "Real" pt 7 ps 0.25,  -1.1968 + -1.1995 *x  title "Fitted real" ls 1, "LinearPlots/Top100M.plot" title "Mimic" pt 7 ps 0.25,  -1.2394 + -1.1958 *x  title "Fitted mimic" ls 3

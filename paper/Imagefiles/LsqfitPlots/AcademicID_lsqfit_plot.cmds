@@ -1,0 +1,19 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "LsqfitPlots/AcademicID_lsqfit.pdf"
+set xlabel "Log(rank)"
+set ylabel "Log(probability)"
+set style line 1 linewidth 4
+set style line 2 linewidth 4
+set style line 3 linewidth 4
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 0.5
+
+plot "AcademicID.plot" title "Observed" pt 7 ps 0.25, -1.2382 + -1.2028 *x  title "Linear fit" ls 2, -3.7939 + -0.5573 *x + -0.0339 *x**2  title "Quadratic fit" ls 3, "PiecewisePlots/middle_AcademicID.plotdat" title "Piecewise fit (h=10, s=10)" w l ls 5 
+

@@ -1,0 +1,19 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "LsqfitPlots/clueWeb12BodiesLarge_lsqfit.pdf"
+set xlabel "Log(rank)"
+set ylabel "Log(probability)"
+set style line 1 linewidth 4
+set style line 2 linewidth 4
+set style line 3 linewidth 4
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 0.5
+
+plot "clueWeb12BodiesLarge.plot" title "Observed" pt 7 ps 0.25, -0.5414 + -1.2928 *x  title "Linear fit" ls 2, -2.434 + -0.8491 *x + -0.0214 *x**2  title "Quadratic fit" ls 3 
+

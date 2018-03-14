@@ -1,0 +1,176 @@
+\begin{thebibliography}{10}
+
+\bibitem{AzzopardideRijke2006}
+L.~Azzopardi and M.~de~Rijke.
+\newblock Automatic construction of known-item finding test beds.
+\newblock In {\em Proc. SIGIR 2006}, pages 603--604, New York, NY, USA, 2006.
+  ACM.
+
+\bibitem{AzzopardideRijkeBalog2007}
+L.~Azzopardi, M.~de~Rijke, and K.~Balog.
+\newblock Building simulated queries for known-item topics: An analysis using
+  six {European} languages.
+\newblock In {\em Proc. SIGIR 2007}, pages 455--462, New York, NY, USA, 2007.
+  ACM.
+
+\bibitem{baezaYates2015incrementalSamplingOfQueryLogs}
+R.~Baeza-Yates.
+\newblock Incremental sampling of query logs.
+\newblock In {\em Proc. SIGIR 2015}, pages 1093--1096, New York, NY, USA, 2015.
+  ACM.
+
+\bibitem{bendersky2010learning}
+M.~Bendersky, D.~Metzler, and W.~B. Croft.
+\newblock Learning concept importance using a weighted dependence model.
+\newblock In {\em Proc. WSDM 2010}, pages 31--40. ACM, 2010.
+
+\bibitem{BerendsenTsagkiasdeRijkeMeij2012}
+R.~Berendsen, M.~Tsagkias, M.~de~Rijke, and E.~Meij.
+\newblock Generating pseudo test collections for learning to rank scientific
+  articles.
+\newblock In T.~Catarci, P.~Forner, D.~Hiemstra, A.~Peñas, and G.~Santucci,
+  editors, {\em Information Access Evaluation. Multilinguality, Multimodality,
+  and Visual Analytics}, volume 7488 of {\em Lecture Notes in Computer
+  Science}, pages 42--53. Springer Berlin Heidelberg, 2012.
+
+\bibitem{BerendsenTsagkiasWeerkampdeRijke2013}
+R.~Berendsen, M.~Tsagkias, W.~Weerkamp, and M.~de~Rijke.
+\newblock Pseudo test collections for training and tuning microblog rankers.
+\newblock In {\em Proceedings of SIGIR 2013}, pages 53--62, New York, NY, USA,
+  2013. ACM.
+
+\bibitem{blei2003latent}
+D.~M. Blei, A.~Y. Ng, and M.~I. Jordan.
+\newblock Latent dirichlet allocation.
+\newblock {\em The Journal of Machine Learning Research}, 3:993--1022, 2003.
+
+\bibitem{BluntDuquetLuckie66}
+C.~R. Blunt, R.~T. Duquet, and P.~T. Luckie.
+\newblock A general model for simulating information storage and retrieval
+  systems.
+\newblock Report of Contract Nonr. 3818(00) Information Systems Branch, Office
+  of Naval Research, April 1966.
+\newblock
+  \url{http://www.dtic.mil/cgi-bin/GetTRDoc?Location=U2&doc=GetTRDoc.pdf&AD=AD0636435}.
+
+\bibitem{ChenKimMooney2010}
+D.~L. Chen, J.~Kim, and R.~J. Mooney.
+\newblock Training a multilingual sportscaster: Using perceptual context to
+  learn language.
+\newblock {\em Journal of Artificial Intelligence Research}, 37:397--435, 2010.
+
+\bibitem{ClarkeCS2004}
+C.~Clarke, N.~Craswell, and I.~Soboroff.
+\newblock Overview of the {TREC 2004 Terabyte Track}.
+\newblock In {\em Proc. TREC 2004}. NIST, 2004.
+
+\bibitem{Cooper73}
+M.~D. Cooper.
+\newblock A simulation model of a retrieval system.
+\newblock {\em Information Storage and Retrieval}, 9:13--32, 1973.
+\newblock
+  \url{http://beachmat.berkeley.edu/~mike/Articles/IPMSimulation1973.pdf}.
+
+\bibitem{DingAS2010}
+S.~Ding, J.~Attenberg, and T.~Suel.
+\newblock Scalable techniques for document identifier assignment in inverted
+  indexes.
+\newblock In {\em Proc. WWW 2010}, pages 311--320, New York, NY, USA, 2010.
+  ACM.
+
+\bibitem{Heapslaw1978}
+H.~S. Heaps.
+\newblock {\em Information retrieval: Computational and theoretical aspects},
+  chapter 7.5, pages 206--208.
+\newblock Academic Press, 1978.
+
+\bibitem{Herdan1960}
+G.~Herdan.
+\newblock {\em Type-token mathematics: A textbook of mathematical linguistics}.
+\newblock Mouton, The Hague, 1960.
+
+\bibitem{Kanungo1996}
+T.~Kanungo.
+\newblock {\em Document degradation models and a methodology for degradation
+  model validation}.
+\newblock PhD thesis, University of Washington, 1996.
+\newblock \url{http://www.kanungo.com/pubs/phdthesis.pdf}.
+
+\bibitem{KemenySnell1960}
+J.~G. Kemeny and J.~L. Snell.
+\newblock {\em Finite Markov Chains}.
+\newblock van Nostrand, Princeton NJ, 1960.
+
+\bibitem{KonowNCL2013}
+R.~Konow, G.~Navarro, C.~L. Clarke, and A.~L\'{o}pez-Ort\'{\i}z.
+\newblock Faster and smaller inverted indices with treaps.
+\newblock In {\em Proc. SIGIR 2013}, pages 193--202, New York, NY, USA, 2013.
+  ACM.
+
+\bibitem{Laherrere1996}
+J.~Laherr\`{e}re.
+\newblock Distributions de type ``fractal parabolique" dans la nature.
+\newblock {\em Comptes Rendus de l'Acad\'{e}mie des sciences. S\'{e}rie 2a,
+  Sciences de la terre et des plan\`{e}tes.}, 322:535--541, 1996.
+\newblock In French with English summary.
+
+\bibitem{Marsaglia1964}
+G.~Marsaglia and T.~Bray.
+\newblock A convenient method for generating normal variables.
+\newblock {\em SIAM Review}, 6:260--264, 1964.
+
+\bibitem{MatsumotoN1998}
+M.~Matsumoto and T.~Nishimura.
+\newblock {Mersenne Twister}: A 623-dimensionally equidistributed uniform
+  pseudo-random number generator.
+\newblock {\em ACM Transactions on Modeling and Computer Simulation},
+  8(1):3--30, Jan. 1998.
+
+\bibitem{Shannon1948}
+C.~Shannon.
+\newblock A mathematical theory of communication.
+\newblock {\em The Bell System Technical Journal}, 27:379-- 423, 1948.
+
+\bibitem{SigurdEW2004}
+B.~Sigurd, M.~Eeg-Olofsson, and J.~van~der Weijer.
+\newblock Word length, sentence length and frequency -- {Z}ipf revisited.
+\newblock {\em Studia Linguistica}, 58(1):37--52, 2004.
+
+\bibitem{sutskeverMartensHinton2011generatingTraffic}
+I.~Sutskever, J.~Martens, and G.~E. Hinton.
+\newblock Generating text with recurrent neural networks.
+\newblock In {\em Proc. ICML-11}, pages 1017--1024, 2011.
+
+\bibitem{TagueNelsonWu80}
+J.~Tague, M.~Nelson, and H.~Wu.
+\newblock Problems in the simulation of bibliographic retrieval systems.
+\newblock In {\em Proc. SIGIR 1980}, pages 236--255, Kent, UK, 1981.
+  Butterworth \&\#38; Co.
+
+\bibitem{vanRijsbergen1977}
+C.~van Rijsbergen.
+\newblock A theoretical basis for the use of co-occurrence data in information
+  retrieval.
+\newblock {\em J. Doc.}, 33(2):106--119, 1977.
+
+\bibitem{wallach2009evaluation}
+H.~M. Wallach, I.~Murray, R.~Salakhutdinov, and D.~Mimno.
+\newblock Evaluation methods for topic models.
+\newblock In {\em Proc. ICML 2009}, pages 1105--1112. ACM, 2009.
+
+\bibitem{williams2005searchable}
+H.~E. Williams and J.~Zobel.
+\newblock Searchable words on the {W}eb.
+\newblock {\em International Journal on Digital Libraries}, 5(2):99--105, 2005.
+
+\bibitem{zipf1949humanBehaviour}
+G.~K. Zipf.
+\newblock {\em Human behavior and the principle of least effort.}
+\newblock Addison-Wesley, 1949.
+
+\bibitem{ZobelMoffat2006}
+J.~Zobel and A.~Moffat.
+\newblock Inverted files for text search engines.
+\newblock {\em ACM Computing Surveys}, 38(2), July 2006.
+
+\end{thebibliography}

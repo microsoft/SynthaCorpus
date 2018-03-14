@@ -1,0 +1,19 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "LsqfitPlots/clueWeb12Titles_lsqfit.pdf"
+set xlabel "Log(rank)"
+set ylabel "Log(probability)"
+set style line 1 linewidth 4
+set style line 2 linewidth 4
+set style line 3 linewidth 4
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 0.5
+
+plot "clueWeb12Titles.plot" title "Observed" pt 7 ps 0.25, -0.6351 + -1.2732 *x  title "Linear fit" ls 2, -3.7272 + -0.5133 *x + -0.0387 *x**2  title "Quadratic fit" ls 3, "PiecewisePlots/middle_clueWeb12Titles.plotdat" title "Piecewise fit (h=10, s=10)" w l ls 5 
+

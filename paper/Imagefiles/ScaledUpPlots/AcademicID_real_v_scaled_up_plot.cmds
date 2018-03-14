@@ -1,0 +1,20 @@
+
+set terminal pdf
+set size ratio 0.707
+set output "ScaledUpPlots/AcademicID_real_v_scaled_up.pdf"
+
+set xlabel "Ln(rank)"
+set ylabel "Ln(probability)"
+set style line 1 linewidth 4
+set style line 2 linewidth 4
+set style line 3 linewidth 4
+set style line 4 linewidth 4
+set style line 5 linewidth 4
+set style line 6 linewidth 4
+set style line 7 linewidth 4
+set style line 8 linewidth 4
+set style line 9 linewidth 4
+set pointsize 3
+
+plot "AcademicID.plot" title "Real" pt 7 ps 0.25,  -1.1205 + -1.213 *x  title "Fitted real" ls 1, "ScaledUpPlots/ScaledUp_AcademicID.plot" title "Scaled_Up" pt 7 ps 0.25,  -1.0843 + -1.2307 *x  title "Fitted scaled_up" ls 3
+
